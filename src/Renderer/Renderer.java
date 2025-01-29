@@ -53,9 +53,9 @@ public class Renderer {
         for (int i = 0; i < renderables.size(); i++) {
             SceneObject obj = (SceneObject) renderables.elementAt(i);
 
-            //if (renderObjectToOcclusionBuffer(obj, viewMatrix)) {
+            if (renderObjectToOcclusionBuffer(obj, viewMatrix)) {
                 renderObjectToFrameBuffer(obj, viewMatrix, g);
-            //}
+            }
 
         }
 
@@ -71,7 +71,7 @@ public class Renderer {
         int[] screenRect = projectBoundingBoxToScreen(obj, viewMatrix);
 
         if (screenRect == null) {
-            System.out.println("----- Object off screen");
+            //System.out.println("----- Object off screen");
             return false; // Object is off-screen
 
         }
@@ -267,7 +267,7 @@ public class Renderer {
     }
 
 private int[] projectBoundingBoxToScreen(SceneObject obj, int[] viewMatrix) {
-    System.out.println("projectBoundingBoxToScreen called for object: " + obj);
+    //System.out.println("projectBoundingBoxToScreen called for object: " + obj);
 
     // 1. Use the object's model's bounding box directly
     int minX = obj.model.minX;

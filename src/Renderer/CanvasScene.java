@@ -38,7 +38,7 @@ class CanvasScene extends Canvas implements Runnable {
         perspective = new Perspective(fovQ24_8, aspectQ24_8, nearQ24_8, farQ24_8);
 
         // Init scene and models.
-        int scene_objects_num = 30;
+        int scene_objects_num = 100;
         model = new ModelQ24_8(Cube.VERTICES, Cube.EDGES);
         scene = new Scene(scene_objects_num);
 
@@ -47,9 +47,9 @@ class CanvasScene extends Canvas implements Runnable {
 
             // Test layout.
             SceneObject so = new SceneObject(model);
-            so.tx = FixedBaseMath.toQ24_8((float) 0 * i); // 4*FixedTrigMath.sin(30*i); //
+            so.tx = 4*FixedTrigMath.sin(30*i); //FixedBaseMath.toQ24_8((float) 0 * i); // 
 
-            so.ty = FixedBaseMath.toQ24_8((float) 0 * i); // 4*FixedTrigMath.cos(30*i); //
+            so.ty = 4*FixedTrigMath.cos(30*i); //FixedBaseMath.toQ24_8((float) 0 * i); // 
 
             so.tz = FixedBaseMath.toQ24_8((float) -5 * i);
             scene.addObject(so, i);
@@ -74,11 +74,11 @@ class CanvasScene extends Canvas implements Runnable {
         // Adjust camera and perspective here if needed.
         int tr = 1 * frame * Constants.Common.ONE_POS / 100;
         
-        //camera.setPosition(tr , tr , 0 );
+        camera.setPosition(tr , tr , 0 );
         
         int ro = 1 *frame * Constants.Common.ONE_DEGREE_IN_RADIANS / 1000;
           
-        //camera.setRotation(ro, ro, ro);
+        camera.setRotation(ro, ro, ro);
 
         // Pass these changing values to the renderer
         scene.renderAll(g, camera, perspective);
@@ -96,7 +96,7 @@ class CanvasScene extends Canvas implements Runnable {
     public void run() {
         while (true) {
             // Call for re-rendering.
-            //repaint();
+            repaint();
 
             frame++;
 
