@@ -6,8 +6,8 @@ package FixedMath;
  * - Always uses fallback for inputs < 1.0 in Q24.8 in reciprocal(...),
  *   so 1/0.4 => ~2.5 exactly.
  *
- * - sqrtTable[i] = sqrt(i<<8) in Q24.8, i=0..255
- * - reciprocalTable[i] = 1/(i<<8) in Q24.8, i=1..255
+ * - sqrtTable[i] = sqrt(i<<8) in Q24.8, i=0..table_size-1
+ * - reciprocalTable[i] = 1/(i<<8) in Q24.8, i=1..table_size-1
  *
  * "1.0" in Q24.8 is integer 256.  So (256 << 8)=65536 is "1.0" in Q24.16.
  */
@@ -23,7 +23,7 @@ public final class FixedBaseMath {
 
     // sqrtTable[i] = sqrt(i<<8) in Q24.8
     private static final int[] sqrtTable       = new int[TABLE_SIZE];
-    // reciprocalTable[i] = 1/(i<<8) in Q24.8, i=1..255
+    // reciprocalTable[i] = 1/(i<<8) in Q24.8, i=1..table_size-1
     private static final int[] reciprocalTable = new int[TABLE_SIZE];
 
     static {
@@ -60,6 +60,11 @@ public final class FixedBaseMath {
     /** Q24.8 => float.  e.g. 256 => 1.0 */
     public static float toFloat(int fixedVal) {
         return (float)fixedVal / (float)Q24_8_SCALE;
+    }
+    
+    /** Q24.8 => int (truncate). e.g. 256 => 1 */
+    public static int toInt(int fixedVal) {
+        return fixedVal >> Q24_8_SHIFT; // Right-shift by 8 bits to remove the fractional part
     }
 
     // ----------------------------
@@ -99,13 +104,13 @@ public final class FixedBaseMath {
 
         int scale = 0;
         int temp  = value;
-        // while out of range [0..255<<8], shift down by 2 bits (divide by 4)
+        // while out of range [0..table_size-1<<8], shift down by 2 bits (divide by 4)
         while (temp > (TABLE_SIZE_MINUS_ONE << Q24_8_SHIFT)) {
             temp >>= 2; 
             scale++;
         }
 
-        int index  = temp >> Q24_8_SHIFT; // [0..255]
+        int index  = temp >> Q24_8_SHIFT; // [0..table_size-1]
         int result = sqrtTable[index];
         // each ">>2" => sqrt => <<1 on the result
         result <<= scale;
@@ -118,7 +123,7 @@ public final class FixedBaseMath {
     /**
      * - If value=0 => returns 0x7fffffff sentinel
      * - If |value|<1.0 => fallback integer method => yields e.g. 1/0.4 => 2.5
-     * - Else use small table for [1..255], scaling if needed for large input
+     * - Else use small table for [1..table_size-1], scaling if needed for large input
      */
     public static int reciprocal(int value) {
         if (value == 0) {

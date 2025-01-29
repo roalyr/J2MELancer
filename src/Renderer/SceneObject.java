@@ -1,6 +1,6 @@
 package Renderer;
 
-import FixedMath.*;
+import Constants.*;
 
 /**
  * SceneObject: a transform + geometry in Q24.8
@@ -16,7 +16,7 @@ public class SceneObject {
     public SceneObject(ModelQ24_8 model) {
         this.model = model;
         // TODO: default transform
-        this.scale = FixedBaseMath.toQ24_8(1.0f);
+        this.scale = Common.ONE_POS;
     }
    
 }

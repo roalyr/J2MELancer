@@ -1,23 +1,19 @@
 package FixedMath;
 
 import javax.microedition.midlet.*;
-import javax.microedition.lcdui.*;
 
 public class FixedMathTestRun extends MIDlet {
+
     public void startApp() {
-	// TESTING:
+
+        FixedBaseMathExtensiveTest.main();
+        FixedTrigMathEdgeCasesTest.main();
+        FixedVecMathTest.main();
+        FixedVecMathEdgeCasesTest.main();
         FixedMatMathTest.main();
-        
-        // TO BE IMPROVED:
-	//FixedVecMathEdgeCasesTest.main();
-		
-	// DONE:
-        //FixedVecMathTest.main();
-	//FixedBaseMathExtensiveTest.main();
-        //FixedTrigMathEdgeCasesTest.main();
-        
-		destroyApp(false);
-		notifyDestroyed();
+
+        destroyApp(false);
+        notifyDestroyed();
     }
 
     public void pauseApp() {
@@ -28,14 +24,14 @@ public class FixedMathTestRun extends MIDlet {
 }
 
 // ====================================
-
 class FixedBaseMathExtensiveTest {
+
     public static void main() {
         System.out.println("1) 1/0.4 = " + testOneOverX(0.4f) + " (expected ~2.5)");
         System.out.println("2) sqrt(2.25) = " + testSqrt(2.25f) + " (expected ~1.5)");
         System.out.println("3) sqrt(16.0) = " + testSqrt(16.0f) + " (expected ~4.0)");
         System.out.println("4) 1/0 => " + testOneOverX(0.0f) + " (sentinel)");
-        // etc...
+    // etc...
     }
 
     private static float testOneOverX(float x) {
@@ -46,15 +42,12 @@ class FixedBaseMathExtensiveTest {
 
     private static float testSqrt(float x) {
         int fixX = FixedBaseMath.toQ24_8(x);
-        int sqX  = FixedBaseMath.sqrt(fixX);
+        int sqX = FixedBaseMath.sqrt(fixX);
         return FixedBaseMath.toFloat(sqX);
     }
 }
 
 // ============================================
-
-
-
 class FixedTrigMathEdgeCasesTest {
 
     // We'll test these degree angles for sin/cos/tan
@@ -70,15 +63,14 @@ class FixedTrigMathEdgeCasesTest {
     public static void main() {
         System.out.println("\n=== Testing Multiple Angles for sin/cos/tan ===\n");
 
-        System.out.println("Deg | angle256  | sin(fixed->float)  sin(actual)   "
-                         + "cos(fixed->float)  cos(actual)   tan(fixed->float)  tan(actual)");
+        System.out.println("Deg | angle256  | sin(fixed->float)  sin(actual)   " + "cos(fixed->float)  cos(actual)   tan(fixed->float)  tan(actual)");
         System.out.println("-------------------------------------------------------------------------------------");
 
         // Old-style loop
         for (int i = 0; i < TEST_DEGREES.length; i++) {
             int deg = TEST_DEGREES[i];
             // convert degrees => [0..255]
-            int angle256 = FixedTrigMath.degToAngle256((float)deg);
+            int angle256 = FixedTrigMath.degToAngle256((float) deg);
 
             int sinFix = FixedTrigMath.sin(angle256);
             int cosFix = FixedTrigMath.cos(angle256);
@@ -99,15 +91,14 @@ class FixedTrigMathEdgeCasesTest {
 
             // Print row
             System.out.println(
-                pad(Integer.toString(deg), 3) + " | " +
-                pad(Integer.toString(angle256), 9) + " | " +
-                pad(fmt(sinVal), 17) + "  " +
-                pad(fmt((float)sinActual), 11) + "  " +
-                pad(fmt(cosVal), 17) + "  " +
-                pad(fmt((float)cosActual), 11) + "  " +
-                pad(fmt(tanVal), 17) + "  " +
-                pad(fmt((float)tanActual), 11)
-            );
+                    pad(Integer.toString(deg), 3) + " | " +
+                    pad(Integer.toString(angle256), 9) + " | " +
+                    pad(fmt(sinVal), 17) + "  " +
+                    pad(fmt((float) sinActual), 11) + "  " +
+                    pad(fmt(cosVal), 17) + "  " +
+                    pad(fmt((float) cosActual), 11) + "  " +
+                    pad(fmt(tanVal), 17) + "  " +
+                    pad(fmt((float) tanActual), 11));
         }
 
         System.out.println("\n=== Testing ACOS for multiple inputs in [-1..1] ===\n");
@@ -122,21 +113,20 @@ class FixedTrigMathEdgeCasesTest {
             // table-based approximation
             int aFix = FixedTrigMath.acos(xFix);
             float aRad = FixedTrigMath.toFloat(aFix);
-            float aDeg = (float)(aRad * 180.0 / Math.PI);
+            float aDeg = (float) (aRad * 180.0 / Math.PI);
 
             // "reference" polynomial in double
             //   acos(x) ~ pi/2 - x - 0.14159*x^3
             // We'll just do that for comparison, since no Math.acos in J2ME
             double x3 = x * x * x;
             double approxRad = (Math.PI * 0.5) - x - (0.14159 * x3);
-            float approxDeg = (float)(approxRad * 180.0 / Math.PI);
+            float approxDeg = (float) (approxRad * 180.0 / Math.PI);
 
             System.out.println(
-                pad(fmt(x), 8) + " | " +
-                pad(Integer.toString(xFix), 10) + " | " +
-                pad(fmt(aDeg), 16) + "    " +
-                fmt(approxDeg)
-            );
+                    pad(fmt(x), 8) + " | " +
+                    pad(Integer.toString(xFix), 10) + " | " +
+                    pad(fmt(aDeg), 16) + "    " +
+                    fmt(approxDeg));
         }
     }
 
@@ -144,8 +134,9 @@ class FixedTrigMathEdgeCasesTest {
      * Simple "round-ish" printing, shows ~4 decimals.
      */
     private static String fmt(float val) {
-        int scaled = (int)(val * 10000f); // e.g. 1.23456 -> 12345
-        float shown = (float)scaled / 10000f;
+        int scaled = (int) (val * 10000f); // e.g. 1.23456 -> 12345
+
+        float shown = (float) scaled / 10000f;
         return Float.toString(shown);
     }
 
@@ -166,14 +157,13 @@ class FixedTrigMathEdgeCasesTest {
 
 
 // ===================================================
-
-
 class FixedVecMathTest {
+
     public static void main() {
         // Vector A = (1.0, 0.0, 0.0) in Q24.8 => (256, 0, 0)
-        int[] vecA = { FixedBaseMath.toQ24_8(1.0f), 0, 0 };
+        int[] vecA = {FixedBaseMath.toQ24_8(1.0f), 0, 0};
         // Vector B = (0.0, 2.0, 0.0) => (0, 512, 0)
-        int[] vecB = { 0, FixedBaseMath.toQ24_8(2.0f), 0 };
+        int[] vecB = {0, FixedBaseMath.toQ24_8(2.0f), 0};
 
         // 1) magnitude(A) => 1.0 => Q24.8=256
         int magA = FixedVecMath.q24_8_magnitude(vecA);
@@ -188,41 +178,38 @@ class FixedVecMathTest {
         // 3) angleBetween(A, B) => 90 degrees => ~1.5708 rad
         int angleFix = FixedVecMath.angleBetweenVectors(vecA, vecB);
         float angleRad = FixedBaseMath.toFloat(angleFix);
-        float angleDeg = (float)Math.toDegrees(angleRad);
+        float angleDeg = (float) Math.toDegrees(angleRad);
         System.out.println("angleBetween(A, B) => " + angleDeg + " degrees (expected 90)");
 
         // 4) cross(A, B) => (0, 0, A.x*B.y - A.y*B.x) => (0, 0, 1.0*2.0)= (0,0,2.0)
         int[] crossAB = FixedVecMath.q24_8_crossProduct(vecA, vecB);
-        System.out.println("cross(A,B) => (" + 
-            FixedBaseMath.toFloat(crossAB[0]) + ", " + 
-            FixedBaseMath.toFloat(crossAB[1]) + ", " + 
-            FixedBaseMath.toFloat(crossAB[2]) + ") (expected (0,0,2))");
+        System.out.println("cross(A,B) => (" +
+                FixedBaseMath.toFloat(crossAB[0]) + ", " +
+                FixedBaseMath.toFloat(crossAB[1]) + ", " +
+                FixedBaseMath.toFloat(crossAB[2]) + ") (expected (0,0,2))");
 
         // 5) normalize(B) => B / 2 => => (0,1,0)
         int[] normB = FixedVecMath.q24_8_normalize(vecB);
         System.out.println("normalize(B) => (" +
-            FixedBaseMath.toFloat(normB[0]) + ", " +
-            FixedBaseMath.toFloat(normB[1]) + ", " +
-            FixedBaseMath.toFloat(normB[2]) + ") (expected (0,1,0))");
+                FixedBaseMath.toFloat(normB[0]) + ", " +
+                FixedBaseMath.toFloat(normB[1]) + ", " +
+                FixedBaseMath.toFloat(normB[2]) + ") (expected (0,1,0))");
     }
 }
-
 
 class FixedVecMathEdgeCasesTest {
 
     public static void main() {
         // 1) Zero vector
         int[] zeroVec = {0, 0, 0};
-        System.out.println("Zero vector magnitude => " 
-            + FixedBaseMath.toFloat(FixedVecMath.q24_8_magnitude(zeroVec)));
-        System.out.println("Zero vector normalized => " 
-            + vecToStr(FixedVecMath.q24_8_normalize(zeroVec)));
+        System.out.println("Zero vector magnitude => " + FixedBaseMath.toFloat(FixedVecMath.q24_8_magnitude(zeroVec)));
+        System.out.println("Zero vector normalized => " + vecToStr(FixedVecMath.q24_8_normalize(zeroVec)));
 
         // TODO: Improve this
         // 2) Parallel vectors
         int[] v1 = {
-            FixedBaseMath.toQ24_8(15.0f), 
-            0, 
+            FixedBaseMath.toQ24_8(15.0f),
+            0,
             0
         };
         int[] v2 = {
@@ -243,22 +230,19 @@ class FixedVecMathEdgeCasesTest {
         // 4) Large magnitude
         // e.g. let's try something near 32768 as a float => ~8 million in Q24.8
         int bigComp = FixedBaseMath.toQ24_8(32768.0f);
-        int[] bigVec = { bigComp, bigComp, bigComp };
-        System.out.println("\nLarge vector magnitude => "
-            + FixedBaseMath.toFloat(FixedVecMath.q24_8_magnitude(bigVec)));
+        int[] bigVec = {bigComp, bigComp, bigComp};
+        System.out.println("\nLarge vector magnitude => " + FixedBaseMath.toFloat(FixedVecMath.q24_8_magnitude(bigVec)));
 
         // 5) 2D mismatch example
-        int[] shortVec = { FixedBaseMath.toQ24_8(3.0f), FixedBaseMath.toQ24_8(-4.0f) };
-        int[] longVec  = { FixedBaseMath.toQ24_8(1.0f), 0, 0, 0 };
+        int[] shortVec = {FixedBaseMath.toQ24_8(3.0f), FixedBaseMath.toQ24_8(-4.0f)};
+        int[] longVec = {FixedBaseMath.toQ24_8(1.0f), 0, 0, 0};
         int dotMismatch = FixedVecMath.q24_8_dotProduct(shortVec, longVec);
-        System.out.println("\nDot product of (3,-4) and (1,0,0,0) => "
-            + FixedBaseMath.toFloat(dotMismatch) 
-            + "  (only first 2 comps used)");
+        System.out.println("\nDot product of (3,-4) and (1,0,0,0) => " + FixedBaseMath.toFloat(dotMismatch) + "  (only first 2 comps used)");
     }
 
     private static void testAngle(String label, int[] vA, int[] vB) {
         int angFix = FixedVecMath.angleBetweenNormalized(vA, vB);
-        float angDeg = (float)Math.toDegrees(FixedBaseMath.toFloat(angFix));
+        float angDeg = (float) Math.toDegrees(FixedBaseMath.toFloat(angFix));
         System.out.println(label + " => " + angDeg + " deg");
     }
 
@@ -266,25 +250,23 @@ class FixedVecMathEdgeCasesTest {
         StringBuffer sb = new StringBuffer("(");
         for (int i = 0; i < v.length; i++) {
             sb.append(FixedBaseMath.toFloat(v[i]));
-            if (i < v.length - 1) sb.append(", ");
+            if (i < v.length - 1) {
+                sb.append(", ");
+            }
         }
         sb.append(")");
         return sb.toString();
     }
 }
 
-
-
 // ==================================
-
-
 class FixedMatMathTest {
 
     // Quick helper for converting a Q24.8 to float and printing about 4 decimals
     private static String fmtQ(int q) {
         float f = FixedBaseMath.toFloat(q);
-        int scaled = (int)(f * 10000f);
-        float shown = (float)scaled / 10000f;
+        int scaled = (int) (f * 10000f);
+        float shown = (float) scaled / 10000f;
         return Float.toString(shown);
     }
 
@@ -294,9 +276,11 @@ class FixedMatMathTest {
         for (int row = 0; row < 4; row++) {
             StringBuffer sb = new StringBuffer("  ");
             for (int col = 0; col < 4; col++) {
-                int val = m[row*4 + col];
+                int val = m[row * 4 + col];
                 sb.append(fmtQ(val));
-                if (col < 3) sb.append(",\t");
+                if (col < 3) {
+                    sb.append(",\t");
+                }
             }
             System.out.println(sb.toString());
         }
@@ -307,7 +291,9 @@ class FixedMatMathTest {
         System.out.print(label + " = (");
         for (int i = 0; i < 4; i++) {
             System.out.print(fmtQ(vec4[i]));
-            if (i < 3) System.out.print(", ");
+            if (i < 3) {
+                System.out.print(", ");
+            }
         }
         System.out.println(")");
     }
@@ -317,7 +303,9 @@ class FixedMatMathTest {
         System.out.print(label + " = (");
         for (int i = 0; i < 3; i++) {
             System.out.print(fmtQ(vec3[i]));
-            if (i < 2) System.out.print(", ");
+            if (i < 2) {
+                System.out.print(", ");
+            }
         }
         System.out.println(")");
     }
@@ -337,10 +325,10 @@ class FixedMatMathTest {
         printMatrix("\nTranslation (3, -2, 10)", transM);
 
         // Transform a point (1,2,3).  Expect => (4,0,13).
-        int[] point123 = { 
-            FixedBaseMath.toQ24_8(1.0f), 
-            FixedBaseMath.toQ24_8(2.0f), 
-            FixedBaseMath.toQ24_8(3.0f) 
+        int[] point123 = {
+            FixedBaseMath.toQ24_8(1.0f),
+            FixedBaseMath.toQ24_8(2.0f),
+            FixedBaseMath.toQ24_8(3.0f)
         };
         int[] resultP = FixedMatMath.transformPoint4x4(transM, point123);
         printVec4("Transformed (1,2,3)", resultP);
@@ -362,36 +350,36 @@ class FixedMatMathTest {
         printVec3("Scaled (3,4,5)", resultV);
 
         // 4) Rotation test: rotate around X by 90° => (y=>z, z=> -y)
-        int angle90 = FixedBaseMath.toQ24_8((float)Math.toRadians(90.0f));
+        int angle90 = FixedBaseMath.toQ24_8((float) Math.toRadians(90.0f));
         int[] rotX = FixedMatMath.createRotationX4x4(angle90);
         printMatrix("\nRotationX(90 deg)", rotX);
 
         // Transform (0,2,0) => (0,0,2)? Actually => (0,0,-2) or (0,0,2) depending on sign convention
-        int[] vec020 = { 0, FixedBaseMath.toQ24_8(2.0f), 0 };
+        int[] vec020 = {0, FixedBaseMath.toQ24_8(2.0f), 0};
         int[] resultRot = FixedMatMath.transformVector4x4(rotX, vec020);
         printVec3("Rotate(0,2,0) around X=90 deg", resultRot);
 
         // 5) Multiply two transforms: rotateZ(45) then translate(1,2,3)
-        int angle45 = FixedBaseMath.toQ24_8((float)Math.toRadians(45.0f));
+        int angle45 = FixedBaseMath.toQ24_8((float) Math.toRadians(45.0f));
         int[] rotZ45 = FixedMatMath.createRotationZ4x4(angle45);
-        int[] combo  = FixedMatMath.multiply4x4(rotZ45, transM);
+        int[] combo = FixedMatMath.multiply4x4(rotZ45, transM);
         printMatrix("\nRotZ(45 deg)*Translate(3,-2,10)", combo);
 
         // 6) createLookAt(eye=(0,0,10), target=(0,0,0), up=(0,1,0))
         //    Then transform a point to see if it's in front/behind
-        int[] eye    = { 0, 0, FixedBaseMath.toQ24_8(10.0f) };
-        int[] target = { 0, 0, 0 };
-        int[] up     = { 0, FixedBaseMath.toQ24_8(1.0f), 0 };
-        int[] camM   = FixedMatMath.createLookAt4x4(eye, target, up);
+        int[] eye = {0, 0, FixedBaseMath.toQ24_8(10.0f)};
+        int[] target = {0, 0, 0};
+        int[] up = {0, FixedBaseMath.toQ24_8(1.0f), 0};
+        int[] camM = FixedMatMath.createLookAt4x4(eye, target, up);
         // TODO: investigate low precision and sign.
         printMatrix("\nLookAt eye(0,0,10) target(0,0,0) up(0,1,0)", camM);
 
         // 7) createPerspective => fov=60 deg => ~1.0472 rad, aspect=1.333, near=1, far=100
         int fovDeg = 60;
-        int fovRad = FixedBaseMath.toQ24_8((float)Math.toRadians(fovDeg));
+        int fovRad = FixedBaseMath.toQ24_8((float) Math.toRadians(fovDeg));
         int aspect = FixedBaseMath.toQ24_8(1.333f);
-        int nearQ  = FixedBaseMath.toQ24_8(1.0f);
-        int farQ   = FixedBaseMath.toQ24_8(100.0f);
+        int nearQ = FixedBaseMath.toQ24_8(1.0f);
+        int farQ = FixedBaseMath.toQ24_8(100.0f);
         int[] perspM = FixedMatMath.createPerspective4x4(fovRad, aspect, nearQ, farQ);
         printMatrix("\nPerspective(60 deg, 1.333 aspect, near=1, far=100)", perspM);
 
@@ -403,7 +391,7 @@ class FixedMatMathTest {
         int[] rotZ0 = FixedMatMath.createRotationZ4x4(angle0);
         printMatrix("\nRotationZ(0 deg)", rotZ0);
 
-        int[] scaleZero = FixedMatMath.createScale4x4(0,0,0);
+        int[] scaleZero = FixedMatMath.createScale4x4(0, 0, 0);
         printMatrix("\nScale(0,0,0) => everything collapses", scaleZero);
 
         int bigX = FixedBaseMath.toQ24_8(10000.0f);
