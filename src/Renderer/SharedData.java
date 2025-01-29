@@ -1,5 +1,7 @@
 package Renderer;
 
+import java.util.Vector;
+
 public class SharedData {
     // Init values
     public static int display_width  = 240;

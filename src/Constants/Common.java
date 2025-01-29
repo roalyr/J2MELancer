@@ -7,6 +7,8 @@ public class Common {
     public static final int ONE_NEG = FixedBaseMath.toQ24_8(-1.0f);
     public static final int ONE_POS = FixedBaseMath.toQ24_8(1.0f);
     
+    public static final int ONE_DEGREE_IN_RADIANS = FixedBaseMath.toQ24_8(0.0174533f);
+    
     public static final int DELTA_RENDER = 33; // ms between frames in Renderer 
     
     public static final float Z_NEAR = 1.0f;

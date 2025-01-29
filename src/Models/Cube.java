@@ -5,6 +5,16 @@ import Constants.Common;
 public class Cube {
     private static int one_p = Common.ONE_POS;
     private static int one_n = Common.ONE_NEG;
+    // Bounding box.
+    public static final int minX = one_n;
+    public static final int minY = one_n;
+    public static final int minZ = one_n;
+    
+    public static final int maxX = one_p;
+    public static final int maxY = one_p;
+    public static final int maxZ = one_p;
+    
+    // Model data.
     public static final int[][] VERTICES = {
         {one_n, one_n, one_n}, {one_n, one_n, one_p},
         {one_n, one_p, one_n}, {one_n, one_p, one_p},
