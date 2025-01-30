@@ -71,6 +71,53 @@ public final class FixedBaseMath {
 
         return guess;
     }
+   
+  public static int pow(int base, float exponent) {
+    if (exponent == 0) {
+        return FixedBaseMath.toQ24_8(1f);
+    }
+    if (base == 0) {
+        return 0;
+    }
+
+    // Separate integer and fractional parts of the exponent
+    int expInt = (int) exponent;
+    float expFrac = exponent - expInt;
+
+    // Calculate the integer part of the power
+    int resultInt = FixedBaseMath.toQ24_8(1f); // Initialize to 1.0 in Q24.8
+    for (int i = 0; i < expInt; i++) {
+        resultInt = FixedBaseMath.q24_8_mul(resultInt, base);
+    }
+
+    // Calculate the fractional part of the power using a Taylor series approximation
+    int resultFrac = powFractional(base, expFrac);
+
+    // Combine the integer and fractional parts
+    return FixedBaseMath.q24_8_mul(resultInt, resultFrac);
+}
+
+private static int powFractional(int base, float expFrac) {
+    // Normalize base to be in the range of [0, 2) in Q24.8
+    int oneQ24_8 = FixedBaseMath.toQ24_8(1f);
+    int baseNorm = base;
+    while (baseNorm >= FixedBaseMath.toQ24_8(2f)) {
+        baseNorm = FixedBaseMath.q24_8_div(baseNorm, FixedBaseMath.toQ24_8(2f));
+    }
+
+    // Calculate (baseNorm - 1) which is in the range of [0, 1)
+    int x = FixedBaseMath.q24_8_sub(baseNorm, oneQ24_8);
+
+    // Use a Taylor series expansion to approximate (1 + x)^expFrac
+    int term1 = oneQ24_8; // 1 in Q24.8
+    int term2 = FixedBaseMath.q24_8_mul(toQ24_8(expFrac), x);
+    int term3 = FixedBaseMath.q24_8_mul(toQ24_8(expFrac * (expFrac - 1) / 2), FixedBaseMath.q24_8_mul(x, x));
+    int term4 = FixedBaseMath.q24_8_mul(toQ24_8(expFrac * (expFrac - 1) * (expFrac - 2) / 6), FixedBaseMath.q24_8_mul(x, FixedBaseMath.q24_8_mul(x, x)));
+
+    int result = FixedBaseMath.q24_8_add(FixedBaseMath.q24_8_add(term1, term2), FixedBaseMath.q24_8_add(term3, term4));
+
+    return result;
+}
 
     private FixedBaseMath() {} // Non-instantiable class
 }
