@@ -47,9 +47,9 @@ class CanvasScene extends Canvas implements Runnable {
 
             // Test layout.
             SceneObject so = new SceneObject(model);
-            so.tx = 4*FixedTrigMath.sin(30*i); //FixedBaseMath.toQ24_8((float) 0 * i); // 
+            so.tx = 4*FixedTrigMath.sin(FixedTrigMath.degreesToRadiansQ24_8(30)*i); //FixedBaseMath.toQ24_8((float) 0 * i); // 
 
-            so.ty = 4*FixedTrigMath.cos(30*i); //FixedBaseMath.toQ24_8((float) 0 * i); // 
+            so.ty = 4*FixedTrigMath.cos(FixedTrigMath.degreesToRadiansQ24_8(30)*i); //FixedBaseMath.toQ24_8((float) 0 * i); // 
 
             so.tz = FixedBaseMath.toQ24_8((float) -5 * i);
             scene.addObject(so, i);

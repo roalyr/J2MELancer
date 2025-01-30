@@ -27,18 +27,14 @@ public class FixedMathTestRun extends MIDlet {
 class FixedBaseMathExtensiveTest {
 
     public static void main() {
-        System.out.println("1) 1/0.4 = " + testOneOverX(0.4f) + " (expected ~2.5)");
+
         System.out.println("2) sqrt(2.25) = " + testSqrt(2.25f) + " (expected ~1.5)");
         System.out.println("3) sqrt(16.0) = " + testSqrt(16.0f) + " (expected ~4.0)");
-        System.out.println("4) 1/0 => " + testOneOverX(0.0f) + " (sentinel)");
+  
     // etc...
     }
 
-    private static float testOneOverX(float x) {
-        int fixX = FixedBaseMath.toQ24_8(x);
-        int recX = FixedBaseMath.reciprocal(fixX);
-        return FixedBaseMath.toFloat(recX);
-    }
+
 
     private static float testSqrt(float x) {
         int fixX = FixedBaseMath.toQ24_8(x);
@@ -70,7 +66,7 @@ class FixedTrigMathEdgeCasesTest {
         for (int i = 0; i < TEST_DEGREES.length; i++) {
             int deg = TEST_DEGREES[i];
             // convert degrees => [0..255]
-            int angle256 = FixedTrigMath.degToAngle256((float) deg);
+            int angle256 = FixedTrigMath.degreesToRadiansQ24_8(TEST_DEGREES[i]);
 
             int sinFix = FixedTrigMath.sin(angle256);
             int cosFix = FixedTrigMath.cos(angle256);

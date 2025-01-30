@@ -15,7 +15,7 @@ public class SceneObject {
 
     public SceneObject(ModelQ24_8 model) {
         this.model = model;
-        // TODO: default transform
+        // Default transform
         this.scale = Common.ONE_POS;
     }
    
