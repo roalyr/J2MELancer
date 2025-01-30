@@ -38,7 +38,7 @@ class CanvasScene extends Canvas implements Runnable {
         perspective = new Perspective(fovQ24_8, aspectQ24_8, nearQ24_8, farQ24_8);
 
         // Init scene and models.
-        int scene_objects_num = 100;
+        int scene_objects_num = 1000;
         model = new ModelQ24_8(Cube.VERTICES, Cube.EDGES);
         scene = new Scene(scene_objects_num);
 
@@ -87,7 +87,7 @@ class CanvasScene extends Canvas implements Runnable {
         long endTime = System.currentTimeMillis();
         long elapsedTime = endTime - startTime;
 
-        System.out.println("Elapsed time: " + elapsedTime + " ms; FPS: " + 1000/elapsedTime);
+        System.out.println("F: " + 1000/elapsedTime);
 
         //System.out.print("\n==== DONE RENDERING ====\n");
 
