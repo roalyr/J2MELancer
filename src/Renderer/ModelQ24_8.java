@@ -18,9 +18,12 @@ public class ModelQ24_8 {
     public int maxY;
     public int maxZ;
 
-    public ModelQ24_8(int[][] vertices, int[][] edges) {
+    public int boundingSphereRadius;
+    
+    public ModelQ24_8(int[][] vertices, int[][] edges, int boundingSphereRadius) {
         this.vertices = vertices;
         this.edges = edges;
+        this.boundingSphereRadius = boundingSphereRadius;
 
         // Initialize bounding box
         if (vertices.length > 0) {

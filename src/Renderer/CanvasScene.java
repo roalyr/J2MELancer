@@ -39,7 +39,7 @@ class CanvasScene extends Canvas implements Runnable {
 
         // Init scene and models.
         int scene_objects_num = 1000;
-        model = new ModelQ24_8(Cube.VERTICES, Cube.EDGES);
+        model = new ModelQ24_8(Cube.VERTICES, Cube.EDGES, Cube.BOUNDINGSPHERERADIUS);
         scene = new Scene(scene_objects_num);
 
         // Populate the scene with objects (init).

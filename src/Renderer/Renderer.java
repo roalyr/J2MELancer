@@ -12,6 +12,10 @@ public class Renderer {
     private int height;
     private Vector renderables;
 
+    // Pre-calculated values passed from Scene
+    private int precalc_halfW_Q24_8;
+    private int precalc_halfH_Q24_8;
+
     public Renderer() {
         this.width = SharedData.display_width;
         this.height = SharedData.display_height;
@@ -20,8 +24,11 @@ public class Renderer {
         this.renderables = new Vector();
     }
 
-    public void setRenderables(Vector renderables) {
+    // Updated setRenderables to receive pre-calculated values
+    public void setRenderables(Vector renderables, int halfWidth, int halfHeight) {
         this.renderables = renderables;
+        this.precalc_halfW_Q24_8 = halfWidth;
+        this.precalc_halfH_Q24_8 = halfHeight;
     }
 
     public void clearBuffers() {
@@ -31,7 +38,7 @@ public class Renderer {
 
         }
 
-        // Clear occlusion buffer
+        // Clear occlusion buffer (if you decide to use it later)
         for (int i = 0; i < occlusionBuffer.length; i++) {
             occlusionBuffer[i] = 0; // 0 means empty
 
@@ -40,110 +47,40 @@ public class Renderer {
 
     public void renderScene(Graphics g, int[] viewMatrix) {
         clearBuffers();
-        // Reset the background
-        g.setColor(0x00000000);
+
+        // Reset the background 
+        g.setColor(0x00000000); // Use black for background
+
         g.fillRect(0, 0, width, height);
 
-
-        // Sort objects by depth (closest to farthest)
-        sortRenderablesByDepth(renderables);
-
-        // TODO: 
-        // Render objects to occlusion buffer and framebuffer in a single loop
+        // Iterate through renderable objects
         for (int i = 0; i < renderables.size(); i++) {
             SceneObject obj = (SceneObject) renderables.elementAt(i);
 
-            if (renderObjectToOcclusionBuffer(obj, viewMatrix)) {
-                renderObjectToFrameBuffer(obj, viewMatrix, g);
+            // Perform object-level culling using bounding box
+            if (isObjectVisible(obj, viewMatrix)) {
+
+                // Build the local transform => TRS => 4x4
+                int[] local = FixedMatMath.createIdentity4x4();
+                local = FixedMatMath.multiply4x4(local, FixedMatMath.createTranslation4x4(obj.tx, obj.ty, obj.tz));
+                local = FixedMatMath.multiply4x4(local, FixedMatMath.createRotationZ4x4(obj.rotZ));
+                local = FixedMatMath.multiply4x4(local, FixedMatMath.createRotationY4x4(obj.rotY));
+                local = FixedMatMath.multiply4x4(local, FixedMatMath.createRotationX4x4(obj.rotX));
+                local = FixedMatMath.multiply4x4(local, FixedMatMath.createScale4x4(obj.scale, obj.scale, obj.scale));
+
+                // Combine with the “viewMatrix” (which has camera & perspective)
+                int[] finalMatrix = FixedMatMath.multiply4x4(viewMatrix, local);
+
+                // Draw edges
+                drawEdges(finalMatrix, obj.model, g);
             }
-
         }
-
 
         // Flush framebuffer to the screen
         g.drawRGB(frameBuffer, 0, width, 0, 0, width, height, true);
     }
 
-    private boolean renderObjectToOcclusionBuffer(SceneObject obj, int[] viewMatrix) {
-        //System.out.println("renderObjectToOcclusionBuffer called for object: " + obj);
-
-        // Project object's bounding box to screen space
-        int[] screenRect = projectBoundingBoxToScreen(obj, viewMatrix);
-
-        if (screenRect == null) {
-            //System.out.println("----- Object off screen");
-            return false; // Object is off-screen
-
-        }
-
-        int minX = screenRect[0];
-        int minY = screenRect[1];
-        int maxX = screenRect[2];
-        int maxY = screenRect[3];
-
-        //System.out.println("  Screen Rectangle: [" + minX + ", " + minY + ", " + maxX + ", " + maxY + "]");
-
-        // Check if the object's bounding rectangle is fully covered
-        boolean fullyOccluded = true;
-        for (int y = minY; y <= maxY; y++) {
-            for (int x = minX; x <= maxX; x++) {
-                if (x >= 0 && x < width && y >= 0 && y < height) {
-                    if (occlusionBuffer[y * width + x] == 0) {
-                        fullyOccluded = false;
-                    //System.out.println("    Pixel (" + x + ", " + y + ") is not occluded.");
-                    //break;
-                    }
-                }
-            }
-            if (!fullyOccluded) {
-                break;
-            }
-        }
-
-        if (fullyOccluded) {
-            //System.out.println("----- Object fully occluded");
-            return false; // Skip rendering if fully occluded
-
-        }
-
-        // Fill the bounding rectangle in the occlusion buffer
-        for (int y = Math.max(0, minY); y <= Math.min(height - 1, maxY); y++) {
-            for (int x = Math.max(0, minX); x <= Math.min(width - 1, maxX); x++) {
-                occlusionBuffer[y * width + x] = 1;
-            }
-        }
-
-        //System.out.println("----- Object MAPPED on culling buffer");
-        return true;
-    }
-
-    private void renderObjectToFrameBuffer(SceneObject obj, int[] viewMatrix, Graphics g) {
-        // Build the local transform => TRS => 4x4
-        int[] local = FixedMatMath.createIdentity4x4();
-
-        // T
-        local = FixedMatMath.multiply4x4(local,
-                FixedMatMath.createTranslation4x4(obj.tx, obj.ty, obj.tz));
-
-        // Rz, Ry, Rx (whatever order you prefer)
-        local = FixedMatMath.multiply4x4(local,
-                FixedMatMath.createRotationZ4x4(obj.rotZ));
-        local = FixedMatMath.multiply4x4(local,
-                FixedMatMath.createRotationY4x4(obj.rotY));
-        local = FixedMatMath.multiply4x4(local,
-                FixedMatMath.createRotationX4x4(obj.rotX));
-
-        // S
-        local = FixedMatMath.multiply4x4(local,
-                FixedMatMath.createScale4x4(obj.scale, obj.scale, obj.scale));
-
-        // Combine with the “viewMatrix” (which has camera & perspective)
-        int[] finalMatrix = FixedMatMath.multiply4x4(viewMatrix, local);
-
-        // Draw edges
-        drawEdges(finalMatrix, obj.model, g);
-    }
-
+    // Updated to use pre-calculated half width and height
     private void drawEdges(int[] finalM, ModelQ24_8 model, Graphics g) {
         int[][] edges = model.edges;
         int[][] verts = model.vertices;
@@ -162,11 +99,11 @@ public class Renderer {
             }
 
             // Perspective division and map to screen space
-            // Using FixedBaseMath.q24_8_div_inline
-            int sx0 = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(SharedData.halfW_Q24_8, FixedBaseMath.q24_8_mul(FixedBaseMath.q24_8_div(p0[0], p0[3]), SharedData.halfW_Q24_8)));
-            int sy0 = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(SharedData.halfH_Q24_8, FixedBaseMath.q24_8_mul(FixedBaseMath.q24_8_div(p0[1], p0[3]), SharedData.halfH_Q24_8)));
-            int sx1 = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(SharedData.halfW_Q24_8, FixedBaseMath.q24_8_mul(FixedBaseMath.q24_8_div(p1[0], p1[3]), SharedData.halfW_Q24_8)));
-            int sy1 = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(SharedData.halfH_Q24_8, FixedBaseMath.q24_8_mul(FixedBaseMath.q24_8_div(p1[1], p1[3]), SharedData.halfH_Q24_8)));
+            // Using FixedBaseMath.div_lut (which you renamed from q24_8_div)
+            int sx0 = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(precalc_halfW_Q24_8, FixedBaseMath.q24_8_mul(FixedBaseMath.q24_8_div(p0[0], p0[3]), precalc_halfW_Q24_8)));
+            int sy0 = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(precalc_halfH_Q24_8, FixedBaseMath.q24_8_mul(FixedBaseMath.q24_8_div(p0[1], p0[3]), precalc_halfH_Q24_8)));
+            int sx1 = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(precalc_halfW_Q24_8, FixedBaseMath.q24_8_mul(FixedBaseMath.q24_8_div(p1[0], p1[3]), precalc_halfW_Q24_8)));
+            int sy1 = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(precalc_halfH_Q24_8, FixedBaseMath.q24_8_mul(FixedBaseMath.q24_8_div(p1[1], p1[3]), precalc_halfH_Q24_8)));
 
             // Clipping (TODO: Implement proper clipping later)
 
@@ -174,6 +111,20 @@ public class Renderer {
             drawLine(sx0, sy0, sx1, sy1, 0xFFFF00FF); // Opaque magenta
 
         }
+    }
+
+    private int[] transformPointQ24_8(int[] m4x4, int[] xyz) {
+        int[] out4 = new int[4];
+        for (int row = 0; row < 4; row++) {
+            long sum = 0;
+            for (int col = 0; col < 3; col++) {
+                sum += (long) m4x4[row * 4 + col] * (long) xyz[col];
+            }
+            // w=1
+            sum += (long) m4x4[row * 4 + 3] * (long) Constants.Common.ONE_POS;
+            out4[row] = (int) (sum >> FixedBaseMath.Q24_8_SHIFT);
+        }
+        return out4;
     }
 
     private void drawLine(int x0, int y0, int x1, int y1, int color) {
@@ -233,171 +184,68 @@ public class Renderer {
         }
     }
 
-    private int[] projectBoundingBoxToScreen(SceneObject obj, int[] viewMatrix) {
-        //System.out.println("projectBoundingBoxToScreen called for object: " + obj);
+private boolean isObjectVisible(SceneObject obj, int[] viewMatrix) {
+    // 1. Get the object's center in world space
+    int centerX = obj.tx;
+    int centerY = obj.ty;
+    int centerZ = obj.tz;
 
-        // 1. Use the object's model's bounding box directly
-        int minX = obj.model.minX;
-        int minY = obj.model.minY;
-        int minZ = obj.model.minZ;
-        int maxX = obj.model.maxX;
-        int maxY = obj.model.maxY;
-        int maxZ = obj.model.maxZ;
+    // 2. Transform the center to view space
+    int[] centerView = transformPointQ24_8(viewMatrix, new int[] { centerX, centerY, centerZ, FixedBaseMath.toQ24_8(1f) });
 
-        //System.out.println("  Bounding Box (local): [" +
-        //        FixedBaseMath.toFloat(minX) + ", " + FixedBaseMath.toFloat(minY) + ", " + FixedBaseMath.toFloat(minZ) + "] to [" +
-        //        FixedBaseMath.toFloat(maxX) + ", " + FixedBaseMath.toFloat(maxY) + ", " + FixedBaseMath.toFloat(maxZ) + "]");
+    // 3. Get the object's bounding sphere radius
+    int radius = obj.model.boundingSphereRadius;
 
-        // 2. Define the eight corners of the bounding box in local space
-        //    Each corner is a combination of min/max values for x, y, and z.
-        int[][] corners = new int[8][];
-        corners[0] = new int[]{minX, minY, minZ}; // 000
+    // 4. Perform a simplified view frustum check
 
-        corners[1] = new int[]{maxX, minY, minZ}; // 100
+    // Check against the near and far planes
+    int nearPlaneZ = FixedBaseMath.toQ24_8(Constants.Common.Z_NEAR);
+    int farPlaneZ = FixedBaseMath.toQ24_8(Constants.Common.Z_FAR);
 
-        corners[2] = new int[]{minX, maxY, minZ}; // 010
-
-        corners[3] = new int[]{maxX, maxY, minZ}; // 110
-
-        corners[4] = new int[]{minX, minY, maxZ}; // 001
-
-        corners[5] = new int[]{maxX, minY, maxZ}; // 101
-
-        corners[6] = new int[]{minX, maxY, maxZ}; // 011
-
-        corners[7] = new int[]{maxX, maxY, maxZ}; // 111
-
-        //for (int i = 0; i < 8; i++) {
-        //    System.out.println("  Corner " + i + " (local): [" +
-        //            FixedBaseMath.toFloat(corners[i][0]) + ", " + FixedBaseMath.toFloat(corners[i][1]) + ", " + FixedBaseMath.toFloat(corners[i][2]) + "]");
-        //}
-
-        // 3. Create the object's local transformation matrix
-        int[] local = FixedMatMath.createIdentity4x4();
-        local = FixedMatMath.multiply4x4(local, FixedMatMath.createTranslation4x4(obj.tx, obj.ty, obj.tz));
-        local = FixedMatMath.multiply4x4(local, FixedMatMath.createRotationZ4x4(obj.rotZ));
-        local = FixedMatMath.multiply4x4(local, FixedMatMath.createRotationY4x4(obj.rotY));
-        local = FixedMatMath.multiply4x4(local, FixedMatMath.createRotationX4x4(obj.rotX));
-        local = FixedMatMath.multiply4x4(local, FixedMatMath.createScale4x4(obj.scale, obj.scale, obj.scale));
-
-        // 4. Transform and project each corner
-        int minScreenX = Integer.MAX_VALUE;
-        int minScreenY = Integer.MAX_VALUE;
-        int maxScreenX = Integer.MIN_VALUE;
-        int maxScreenY = Integer.MIN_VALUE;
-
-        for (int i = 0; i < 8; i++) {
-            // a. Transform to world space
-            int[] worldCorner = transformPointQ24_8(local, corners[i]);
-            //    System.out.println("  Corner " + i + " (world): [" +
-            //            FixedBaseMath.toFloat(worldCorner[0]) + ", " + FixedBaseMath.toFloat(worldCorner[1]) + ", " +
-            //            FixedBaseMath.toFloat(worldCorner[2]) + ", w=" + FixedBaseMath.toFloat(worldCorner[3]) + "]");
-
-            // b. Transform to view space
-            int[] viewCorner = transformPointQ24_8(viewMatrix, worldCorner);
-            //    System.out.println("  Corner " + i + " (view): [" +
-            //            FixedBaseMath.toFloat(viewCorner[0]) + ", " + FixedBaseMath.toFloat(viewCorner[1]) + ", " +
-            //            FixedBaseMath.toFloat(viewCorner[2]) + ", w=" + FixedBaseMath.toFloat(viewCorner[3]) + "]");
-
-            // c. Project to screen space
-            int[] screenCorner = projectPointToScreen(viewCorner);
-
-            // d. Update min/max screen coordinates
-            if (screenCorner != null) {
-                //        System.out.println("  Corner " + i + " (screen): [" + screenCorner[0] + ", " + screenCorner[1] + "]");
-
-                minScreenX = Math.min(minScreenX, screenCorner[0]);
-                minScreenY = Math.min(minScreenY, screenCorner[1]);
-                maxScreenX = Math.max(maxScreenX, screenCorner[0]);
-                maxScreenY = Math.max(maxScreenY, screenCorner[1]);
-            } else {
-                //       System.out.println("  Corner " + i + " (screen): [null]");
-            }
-        }
-
-        // 5. Check if the object is off-screen
-        if (minScreenX == Integer.MAX_VALUE || minScreenY == Integer.MAX_VALUE || maxScreenX == Integer.MIN_VALUE || maxScreenY == Integer.MIN_VALUE) {
-            //    System.out.println("  Object is completely off-screen or invalid projection.");
-            return null;
-        }
-
-        //System.out.println("  Screen Bounding Box: [" + minScreenX + ", " + minScreenY + ", " + maxScreenX + ", " + maxScreenY + "]");
-        return new int[]{minScreenX, minScreenY, maxScreenX, maxScreenY};
+    if (centerView[2] - radius > farPlaneZ) {
+        return false; // Object is behind the far plane
     }
 
-    private int[] projectPointToScreen(int[] p) {
-        // Skip if w=0
-        if (p[3] == 0) {
-            return null;
-        }
-
-        float w = (float) p[3];
-        float x = p[0] / w;
-        float y = p[1] / w;
-        float z = -p[2]; // -Z is forward
-
-        // Far-plane cull
-        float farPlaneZ = -FixedBaseMath.toQ24_8(Constants.Common.Z_FAR);
-        if (z < farPlaneZ) {
-            return null;
-        }
-
-        // Map x, y to screen
-        int sx = (int) (SharedData.halfW + x * SharedData.halfW);
-        int sy = (int) (SharedData.halfH - y * SharedData.halfH);
-
-        // X-planes cull
-        if (sx < SharedData.leftPlaneX || sx > SharedData.rightPlaneX) {
-            return null;
-        }
-
-        // Y-planes cull
-        if (sy < SharedData.upPlaneY || sy > SharedData.downPlaneY) {
-            return null;
-        }
-
-        return new int[]{sx, sy};
+    if (centerView[2] + radius < nearPlaneZ) {
+        return false; // Object is in front of the near plane
     }
 
-    private int[] transformPointQ24_8(int[] m4x4, int[] xyz) {
-        int[] out4 = new int[4];
-        for (int row = 0; row < 4; row++) {
-            long sum = 0;
-            for (int col = 0; col < 3; col++) {
-                sum += (long) m4x4[row * 4 + col] * (long) xyz[col];
-            }
-            // w=1
-            sum += (long) m4x4[row * 4 + 3] * (long) Constants.Common.ONE_POS;
-            out4[row] = (int) (sum >> 8);
-        }
-        return out4;
+    // 5. Project the center point to screen space
+    int[] screenPoint = projectPointToScreen(centerView);
+
+    if (screenPoint == null) {
+        return false; // Object is not projectable (e.g., w <= 0)
     }
 
-    // You'll need to implement this based on your depth calculation needs
-    private void sortRenderablesByDepth(Vector renderables) {
-        // A simple bubble sort for demonstration. 
-        // Consider more efficient sorting algorithms if you have many objects.
-        int n = renderables.size();
-        boolean swapped;
-        do {
-            swapped = false;
-            for (int i = 1; i < n; i++) {
-                SceneObject obj1 = (SceneObject) renderables.elementAt(i - 1);
-                SceneObject obj2 = (SceneObject) renderables.elementAt(i);
+    int screenX = screenPoint[0];
+    int screenY = screenPoint[1];
 
-                // Calculate average depth for sorting. 
-                // You might need a more sophisticated depth calculation depending on your needs.
-                int depth1 = obj1.tz;
-                int depth2 = obj2.tz;
+    // 6. Check against screen bounds using the pre-calculated screen dimensions
+    int screenRadius = FixedBaseMath.toInt(FixedBaseMath.q24_8_mul(radius, FixedBaseMath.q24_8_div(FixedBaseMath.toQ24_8(1f), Math.abs(centerView[3]))));
 
-                if (depth1 < depth2) { // Sort from closest to farthest
-
-                    renderables.setElementAt(obj2, i - 1);
-                    renderables.setElementAt(obj1, i);
-                    swapped = true;
-                }
-            }
-            n--;
-        } while (swapped);
+    if (screenX + screenRadius < 0 || screenX - screenRadius > SharedData.display_width ||
+        screenY + screenRadius < 0 || screenY - screenRadius > SharedData.display_height) {
+        return false; // Object is outside the screen bounds
     }
+
+    return true; // Object is potentially visible
+}
+
+private int[] projectPointToScreen(int[] p) {
+    // Skip if w is too small or negative
+    if (p[3] <= 0) { // Use <= for robustness
+        return null;
+    }
+
+    // Perspective division
+    int x = FixedBaseMath.q24_8_div(p[0], p[3]);
+    int y = FixedBaseMath.q24_8_div(p[1], p[3]);
+
+    // Map x, y to screen.
+    int sx = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(precalc_halfW_Q24_8, FixedBaseMath.q24_8_mul(x, precalc_halfW_Q24_8)));
+    int sy = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(precalc_halfH_Q24_8, FixedBaseMath.q24_8_mul(y, precalc_halfH_Q24_8)));
+
+    return new int[]{sx, sy};
+}
+
 }

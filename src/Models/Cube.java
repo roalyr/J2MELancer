@@ -14,6 +14,8 @@ public class Cube {
     public static final int maxY = one_p;
     public static final int maxZ = one_p;
     
+    public static final int BOUNDINGSPHERERADIUS = Common.ONE_POS;
+    
     // Model data.
     public static final int[][] VERTICES = {
         {one_n, one_n, one_n}, {one_n, one_n, one_p},
