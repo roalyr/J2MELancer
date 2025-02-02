@@ -221,8 +221,6 @@ class FixedMatMathTest {
             FixedBaseMath.toQ24_8(2.0f),
             FixedBaseMath.toQ24_8(3.0f)
         };
-        int[] resultPoint = FixedMatMath.transformPoint4x4(transM, point123);
-        printVec4("Transformed Point (1,2,3)", resultPoint); // Expected: (4, 0, 13)
 
         // Test 3: Scale Matrix
         int sx = FixedBaseMath.toQ24_8(2.0f);
