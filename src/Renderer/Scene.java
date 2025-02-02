@@ -110,7 +110,9 @@ public class Scene {
         }
         
         renderer.setRenderables(visibleObjects, precalc_halfW_Q24_8, precalc_halfH_Q24_8);
-        renderer.renderScene(g, viewMatrix);
+        renderer.clearBuffers(g);
+        renderer.renderSceneVertices(g, viewMatrix);
+        renderer.renderSceneEdges(g, viewMatrix);
     }
     
     /**

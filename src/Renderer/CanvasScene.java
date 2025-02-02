@@ -36,7 +36,7 @@ class CanvasScene extends Canvas implements Runnable {
         perspective = new Perspective(fovQ, aspectQ, nearQ, farQ);
         
         // Initialize model and scene.
-        model = new ModelQ24_8(Models.Sphere.VERTICES, Models.Sphere.EDGES, Models.Sphere.BOUNDING_SPHERE_RADIUS);
+        model = new ModelQ24_8(Models.Cube.VERTICES, Models.Cube.EDGES, Models.Cube.BOUNDING_SPHERE_RADIUS);
         scene = new Scene(sceneObjectsNum);
         
         // Populate the scene with objects.

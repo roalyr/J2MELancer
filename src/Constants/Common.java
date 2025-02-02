@@ -13,5 +13,5 @@ public class Common {
     public static final int DELTA_RENDER = 1000/FPS_RENDER_MAX; // ms between frames in Renderer 
     
     public static final float Z_NEAR = 1.0f;
-    public static final float Z_FAR = 1e2f;  // ~8.3e6 is near the upper limit. 
+    public static final float Z_FAR = 5e2f;  // ~8.3e6 is near the upper limit. 
 }

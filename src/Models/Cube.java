@@ -16,7 +16,7 @@ public class Cube {
     public static final int maxY = one_p;
     public static final int maxZ = one_p;
     
-    public static final int BOUNDING_SPHERE_RADIUS = FixedBaseMath.toQ24_8(1.0f);
+    public static final int BOUNDING_SPHERE_RADIUS = FixedBaseMath.toQ24_8(2.0f);
     
     // Model data.
     public static final int[][] VERTICES = {
