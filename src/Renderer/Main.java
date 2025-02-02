@@ -19,8 +19,6 @@ public class Main extends MIDlet implements CommandListener {
 
     public void startApp() {
         display.setCurrent(canvasScene);
-        SharedData.display_width = display.getCurrent().getWidth();
-        SharedData.display_height = display.getCurrent().getHeight();
         new Thread(canvasScene).start();
     }
 

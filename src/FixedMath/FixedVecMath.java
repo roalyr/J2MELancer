@@ -1,37 +1,29 @@
 package FixedMath;
 
-/**
- * FixedVecMath for Q24.8 vectors:
- *   - magnitude
- *   - normalize
- *   - dotProduct
- *   - crossProduct
- *   - angleBetweenVectors (returns Q24.8 radians)
- *
- * Key Fix: magnitude uses shift >>8, not >>16, to handle Q48.16 -> Q24.8.
- */
 public final class FixedVecMath {
 
-    public static final int Q24_8_SHIFT = 8; 
+    public static final int Q24_8_SHIFT = 8;
     public static final int Q24_8_SCALE = (1 << Q24_8_SHIFT);
 
     // -------------------------------------
-    // Vector Add/Sub
+    // Vector Add/Sub (Assumes same length)
     // -------------------------------------
     public static int[] q24_8_add(int[] v1, int[] v2) {
-        int len = Math.min(v1.length, v2.length);
+        int len = v1.length;
         int[] result = new int[len];
         for (int i = 0; i < len; i++) {
-            result[i] = FixedBaseMath.q24_8_add(v1[i], v2[i]);
+            result[i] = v1[i] + v2[i];  // Inlined addition
+
         }
         return result;
     }
 
     public static int[] q24_8_sub(int[] v1, int[] v2) {
-        int len = Math.min(v1.length, v2.length);
+        int len = v1.length;
         int[] result = new int[len];
         for (int i = 0; i < len; i++) {
-            result[i] = FixedBaseMath.q24_8_sub(v1[i], v2[i]);
+            result[i] = v1[i] - v2[i];  // Inlined subtraction
+
         }
         return result;
     }
@@ -40,17 +32,29 @@ public final class FixedVecMath {
     // Scalar Multiply/Divide
     // -------------------------------------
     public static int[] q24_8_mul(int[] v, int scalar) {
-        int[] result = new int[v.length];
-        for (int i = 0; i < v.length; i++) {
-            result[i] = FixedBaseMath.q24_8_mul(v[i], scalar);
+        int len = v.length;
+        int[] result = new int[len];
+        for (int i = 0; i < len; i++) {
+            // Fixed point multiplication: (v[i] * scalar) >> Q24_8_SHIFT
+            long tmp = ((long) v[i] * (long) scalar) >> Q24_8_SHIFT;
+            result[i] = (int) tmp;
         }
         return result;
     }
 
     public static int[] q24_8_div(int[] v, int scalar) {
-        int[] result = new int[v.length];
-        for (int i = 0; i < v.length; i++) {
-            result[i] = FixedBaseMath.q24_8_div(v[i], scalar);
+        int len = v.length;
+        int[] result = new int[len];
+        // Avoid division by zero
+        if (scalar == 0) {
+            for (int i = 0; i < len; i++) {
+                result[i] = (v[i] >= 0) ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+            }
+            return result;
+        }
+        for (int i = 0; i < len; i++) {
+            // Fixed point division: (v[i] << Q24_8_SHIFT) / scalar
+            result[i] = (int) (((long) v[i] << Q24_8_SHIFT) / scalar);
         }
         return result;
     }
@@ -59,41 +63,30 @@ public final class FixedVecMath {
     // Dot Product
     // -------------------------------------
     /**
-     * Dot product in Q24.8 => sum( v1[i]*v2[i] ) >> 8
-     * Returns a Q24.8 result.
+     * Returns (v1[0]*v2[0] + ... + v1[n-1]*v2[n-1]) >> Q24_8_SHIFT, 
+     * i.e. the dot product in Q24.8.
      */
     public static int q24_8_dotProduct(int[] v1, int[] v2) {
-        int len = Math.min(v1.length, v2.length);
-        long sum = 0; // 64-bit
+        int len = v1.length;
+        long sum = 0;
         for (int i = 0; i < len; i++) {
-            // Q24.8 * Q24.8 => Q48.16 in raw integer
-            sum += (long)v1[i] * (long)v2[i];
+            sum += (long) v1[i] * (long) v2[i];
         }
-        // shift >>8 => convert Q48.16 => Q24.8
-        return (int)(sum >> Q24_8_SHIFT);
+        return (int) (sum >> Q24_8_SHIFT);
     }
 
     // -------------------------------------
-    // Cross Product (3D)
+    // Cross Product (3D only)
     // -------------------------------------
     /**
-     * Cross product v1 x v2 in Q24.8. We assume at least 3 components each.
-     * result[i] also in Q24.8.
+     * Computes the cross product (v1 x v2) for 3D vectors.
+     * Each component is computed in 64-bit and then shifted by Q24_8_SHIFT.
      */
     public static int[] q24_8_crossProduct(int[] v1, int[] v2) {
         int[] result = new int[3];
-        result[0] = FixedBaseMath.q24_8_sub(
-                        FixedBaseMath.q24_8_mul(v1[1], v2[2]),
-                        FixedBaseMath.q24_8_mul(v1[2], v2[1])
-                    );
-        result[1] = FixedBaseMath.q24_8_sub(
-                        FixedBaseMath.q24_8_mul(v1[2], v2[0]),
-                        FixedBaseMath.q24_8_mul(v1[0], v2[2])
-                    );
-        result[2] = FixedBaseMath.q24_8_sub(
-                        FixedBaseMath.q24_8_mul(v1[0], v2[1]),
-                        FixedBaseMath.q24_8_mul(v1[1], v2[0])
-                    );
+        result[0] = (int) ((((long) v1[1] * v2[2]) - ((long) v1[2] * v2[1])) >> Q24_8_SHIFT);
+        result[1] = (int) ((((long) v1[2] * v2[0]) - ((long) v1[0] * v2[2])) >> Q24_8_SHIFT);
+        result[2] = (int) ((((long) v1[0] * v2[1]) - ((long) v1[1] * v2[0])) >> Q24_8_SHIFT);
         return result;
     }
 
@@ -101,35 +94,38 @@ public final class FixedVecMath {
     // Magnitude (Length)
     // -------------------------------------
     /**
-     * sqrt of sum of squares, each v[i] is Q24.8 => squared => Q48.16 => sum => Q48.16
-     * shift >>8 => Q24.8, then sqrt(...) => Q24.8
+     * Returns the magnitude of vector v.
+     * Each component is in Q24.8; the sum of squares (Q48.16) is shifted right by 8 
+     * to convert to Q24.8 before taking the square root.
      */
     public static int q24_8_magnitude(int[] v) {
+        int len = v.length;
         long sqrSum = 0;
-        for (int i = 0; i < v.length; i++) {
-            long val = (long)v[i]; // Q24.8
-            sqrSum += val * val;   // Q48.16
+        for (int i = 0; i < len; i++) {
+            long val = v[i];
+            sqrSum += val * val;
         }
-        // SHIFT >>8 => Q24.8
-        long q24_8_val = sqrSum >> 8;
+        // Convert Q48.16 sum to Q24.8 by shifting right by 8 bits.
+        long q24_8_val = sqrSum >> Q24_8_SHIFT;
         if (q24_8_val > 0x7FFFFFFF) {
-            q24_8_val = 0x7FFFFFFF; // clamp if needed
+            q24_8_val = 0x7FFFFFFF; // Clamp if needed.
+
         }
-        return FixedBaseMath.sqrt((int)q24_8_val);
+        return FixedBaseMath.sqrt((int) q24_8_val);
     }
 
     // -------------------------------------
     // Normalize
     // -------------------------------------
     /**
-     * v / |v| => each component => Q24.8
-     * If magnitude=0 => zero vector returned.
+     * Returns the normalized vector v (v / |v|) in Q24.8.
+     * If the magnitude is zero, returns a zero vector.
      */
     public static int[] q24_8_normalize(int[] v) {
-        int mag = q24_8_magnitude(v); // Q24.8
+        int mag = q24_8_magnitude(v);
         if (mag == 0) {
-            int[] zeroV = new int[v.length];
-            return zeroV;
+            return new int[v.length];  // Zero vector.
+
         }
         return q24_8_div(v, mag);
     }
@@ -138,56 +134,56 @@ public final class FixedVecMath {
     // Angle Between Two Vectors
     // -------------------------------------
     /**
-     * angleBetweenVectors(v1, v2) = acos( dot / (mag1*mag2) ), returns Q24.8 *radians*.
-     * If you want degrees => toFloat(angle)*180/PI.
+     * Computes the angle between v1 and v2 in Q24.8 radians.
+     * The formula used is acos( dot(v1,v2) / (|v1|*|v2|) ).
+     * If either vector has zero magnitude, returns 0.
      */
     public static int angleBetweenVectors(int[] v1, int[] v2) {
-        int dot  = q24_8_dotProduct(v1, v2); // Q24.8
-        int mag1 = q24_8_magnitude(v1);      // Q24.8
-        int mag2 = q24_8_magnitude(v2);      // Q24.8
-
+        int dot = q24_8_dotProduct(v1, v2);
+        int mag1 = q24_8_magnitude(v1);
+        int mag2 = q24_8_magnitude(v2);
         if (mag1 == 0 || mag2 == 0) {
-            return 0; // undefined angle => return 0
+            return 0;
         }
-
-        // cosAngle = (dot << 8)/(mag1*mag2) => Q24.8
+        // Compute cosine in Q24.8: (dot << Q24_8_SHIFT) / (mag1 * mag2)
         long numerator = ((long) dot) << Q24_8_SHIFT;
-        long denom = (long) mag1 * (long) mag2;
+        long denom = (long) mag1 * mag2;
         if (denom == 0) {
             return 0;
         }
-        long cosFix = numerator / denom;
-
-        // optional: clamp to [-1..1] in Q24.8
+        long cosVal = numerator / denom;
+        // Clamp to [-1, 1] in Q24.8.
         long limit = (1 << Q24_8_SHIFT);
-        if (cosFix >  limit) cosFix =  limit;
-        if (cosFix < -limit) cosFix = -limit;
-
-        return FixedTrigMath.acos((int) cosFix);
+        if (cosVal > limit) {
+            cosVal = limit;
+        }
+        if (cosVal < -limit) {
+            cosVal = -limit;
+        }
+        return FixedTrigMath.acos((int) cosVal);
     }
 
     // -------------------------------------
-    // Optional: angleBetweenNormalized(v1, v2)
+    // Angle Between Normalized Vectors (Optional)
     // -------------------------------------
     /**
-     * If you prefer normalizing each vector first, you can do:
-     * angleBetweenNormalized(v1, v2).
-     * This is rarely needed once magnitude is correct, but we show it for completeness.
+     * Computes the angle between normalized vectors v1 and v2.
+     * First normalizes v1 and v2, then computes acos(dot).
      */
     public static int angleBetweenNormalized(int[] v1, int[] v2) {
-        // 1) normalize each
         int[] vn1 = q24_8_normalize(v1);
         int[] vn2 = q24_8_normalize(v2);
-
-        // 2) dot => Q24.8, clamp => acos
-        int dotN = q24_8_dotProduct(vn1, vn2);
-        // clamp to [-1..1]
-        if (dotN >  Q24_8_SCALE) dotN =  Q24_8_SCALE;
-        if (dotN < -Q24_8_SCALE) dotN = -Q24_8_SCALE;
-
-        return FixedTrigMath.acos(dotN);
+        int dot = q24_8_dotProduct(vn1, vn2);
+        if (dot > Q24_8_SCALE) {
+            dot = Q24_8_SCALE;
+        }
+        if (dot < -Q24_8_SCALE) {
+            dot = -Q24_8_SCALE;
+        }
+        return FixedTrigMath.acos(dot);
     }
 
-    // Prevent instantiation
-    private FixedVecMath() {}
+    // Prevent instantiation.
+    private FixedVecMath() {
+    }
 }

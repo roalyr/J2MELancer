@@ -11,6 +11,7 @@ public class SceneObject {
     public int tx,  ty,  tz;     // translation
     public int rotX,  rotY,  rotZ; // rotation angles Q24.8
     public int scale;          // uniform scale in Q24.8 (or separate sx, sy, sz)
+    public int depth;
 
 
     public SceneObject(ModelQ24_8 model) {

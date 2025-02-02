@@ -1,6 +1,8 @@
 package Models;
 
 import Constants.Common;
+import FixedMath.FixedBaseMath;
+
 
 public class Cube {
     private static int one_p = Common.ONE_POS;
@@ -14,7 +16,7 @@ public class Cube {
     public static final int maxY = one_p;
     public static final int maxZ = one_p;
     
-    public static final int BOUNDINGSPHERERADIUS = Common.ONE_POS_HALF;
+    public static final int BOUNDING_SPHERE_RADIUS = FixedBaseMath.toQ24_8(1.0f);
     
     // Model data.
     public static final int[][] VERTICES = {

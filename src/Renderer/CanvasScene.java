@@ -1,9 +1,8 @@
 package Renderer;
 
 import javax.microedition.lcdui.*;
-
 import FixedMath.*;
-import Models.Cube;
+import Constants.*;
 
 class CanvasScene extends Canvas implements Runnable {
 
@@ -11,100 +10,71 @@ class CanvasScene extends Canvas implements Runnable {
     private ModelQ24_8 model;
     private Camera camera;
     private Perspective perspective;
-    int frame = 0;
+    private int frame = 0;
+    private final int sceneObjectsNum = 1000;
+    
+    // Pre-calculate 30° in Q24.8 format once.
+    private final int ANGLE_30_Q = FixedTrigMath.degreesToRadiansQ24_8(30);
 
     public CanvasScene() {
-
-        this.setFullScreenMode(true);
+        setFullScreenMode(true);
+        SharedData.display_width = getWidth();
+        SharedData.display_height = getHeight();
+        SharedData.halfW_Q24_8 = FixedBaseMath.toQ24_8(SharedData.display_width / 2);
+        SharedData.halfH_Q24_8 = FixedBaseMath.toQ24_8(SharedData.display_height / 2);
         
-        // Init camera and perspective.
+        // Initialize camera.
         camera = new Camera();
-        camera.setPosition(
-                0 * Constants.Common.ONE_POS,
-                0 * Constants.Common.ONE_POS,
-                0 * Constants.Common.ONE_POS);
+        camera.setPosition(0, 0, 0);
+        camera.setRotation(0, 0, 0);
         
-        camera.setRotation(
-                0 * Constants.Common.ONE_DEGREE_IN_RADIANS,
-                0 * Constants.Common.ONE_DEGREE_IN_RADIANS,
-                0 * Constants.Common.ONE_DEGREE_IN_RADIANS);
+        // Initialize perspective using constants from Common.
+        int fovQ = FixedBaseMath.toQ24_8(80.0f);
+        int aspectQ = FixedBaseMath.toQ24_8((float) SharedData.display_width / SharedData.display_height);
+        int nearQ = FixedBaseMath.toQ24_8(Common.Z_NEAR);
+        int farQ = FixedBaseMath.toQ24_8(Common.Z_FAR);
+        perspective = new Perspective(fovQ, aspectQ, nearQ, farQ);
         
-        // Default Perspective Matrix (some defaults for testing here).
-        int fovQ24_8 = FixedBaseMath.toQ24_8(60.0f);
-        int aspectQ24_8 = FixedBaseMath.toQ24_8((float) SharedData.display_width / SharedData.display_height);
-        int nearQ24_8 = FixedBaseMath.toQ24_8(1.0f);
-        int farQ24_8 = FixedBaseMath.toQ24_8(1000.0f);
+        // Initialize model and scene.
+        model = new ModelQ24_8(Models.Sphere.VERTICES, Models.Sphere.EDGES, Models.Sphere.BOUNDING_SPHERE_RADIUS);
+        scene = new Scene(sceneObjectsNum);
         
-        perspective = new Perspective(fovQ24_8, aspectQ24_8, nearQ24_8, farQ24_8);
-
-        // Init scene and models.
-        int scene_objects_num = 1000;
-        model = new ModelQ24_8(Cube.VERTICES, Cube.EDGES, Cube.BOUNDINGSPHERERADIUS);
-        scene = new Scene(scene_objects_num);
-
-        // Populate the scene with objects (init).
-        for (int i = 0; i < scene_objects_num; i++) {
-
-            // Test layout.
+        // Populate the scene with objects.
+        for (int i = 0; i < sceneObjectsNum; i++) {
             SceneObject so = new SceneObject(model);
-            so.tx = 4*FixedTrigMath.sin(FixedTrigMath.degreesToRadiansQ24_8(30)*i); //FixedBaseMath.toQ24_8((float) 0 * i); // 
-
-            so.ty = 4*FixedTrigMath.cos(FixedTrigMath.degreesToRadiansQ24_8(30)*i); //FixedBaseMath.toQ24_8((float) 0 * i); // 
-
-            so.tz = FixedBaseMath.toQ24_8((float) -5 * i);
+            int angle = ANGLE_30_Q * i; // Angle in Q24.8
+            so.tx = 4 * FixedTrigMath.sin(angle);
+            so.ty = 4 * FixedTrigMath.cos(angle);
+            so.tz = FixedBaseMath.toQ24_8(-5 * i + 1000);
             scene.addObject(so, i);
         }
     }
 
     protected void paint(Graphics g) {
-
-        long startTime = System.currentTimeMillis();
-
-
-        // Scene logic here (updates).
-        // models
-        // transforms
-
-        // TODO: make methods. Investigate calculating this once or update only
-        // when FoV or screen size changes.
-        // scene.cameraMatrix = ...
-        // scene.prespectiveMatrix = ...
-
-
-        // Adjust camera and perspective here if needed.
-        int tr = 1 * frame * Constants.Common.ONE_POS / 100;
+        // Use constants from Common.
+        int onePos = Common.ONE_POS;
+        int oneDegRad = Common.ONE_DEGREE_IN_RADIANS;
+        int currentFrame = frame;
         
-        camera.setPosition(tr , tr , 0 );
+        // Update camera position and rotation.
+        int tr = currentFrame * onePos / 100;
+        camera.setPosition(tr, 0, tr);
+        int ro = currentFrame * oneDegRad / 5;
+        camera.setRotation(0, -ro, 0);
         
-        int ro = 1 *frame * Constants.Common.ONE_DEGREE_IN_RADIANS / 1000;
-          
-        camera.setRotation(ro, ro, ro);
-
-        // Pass these changing values to the renderer
+        // Render the scene.
         scene.renderAll(g, camera, perspective);
-
-
-        long endTime = System.currentTimeMillis();
-        long elapsedTime = endTime - startTime;
-
-        System.out.println("F: " + 1000/elapsedTime);
-
-        //System.out.print("\n==== DONE RENDERING ====\n");
-
     }
 
     public void run() {
         while (true) {
-            // Call for re-rendering.
             repaint();
-
             frame++;
-
             try {
-                Thread.sleep(Constants.Common.DELTA_RENDER);
+                Thread.sleep(Common.DELTA_RENDER);
             } catch (InterruptedException e) {
+                // Handle interruption if needed.
             }
-
         }
     }
 }
