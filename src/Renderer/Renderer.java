@@ -53,6 +53,7 @@ public class Renderer {
     }
 
     public void clearBuffers() {
+        // Fill the framebuffer with BACKGROUND_COLOR.
         for (int i = 0; i < frameBuffer.length; i++) {
             frameBuffer[i] = BACKGROUND_COLOR;
         }
@@ -84,7 +85,7 @@ public class Renderer {
             drawEdges(finalMatrix, obj.model, g);
         }
 
-        // Blit framebuffer.
+        // Blit framebuffer to the screen.
         g.drawRGB(frameBuffer, 0, localWidth, 0, 0, localWidth, localHeight, true);
 
         updateFPS();
@@ -191,8 +192,9 @@ public class Renderer {
             drawLine(screenP0[0], screenP0[1], screenP1[0], screenP1[1], blendedColor);
         }
     }
-
-/**
+    
+    
+     /**
      * Draws a line using Bresenham's algorithm. Checks bounds per pixel and
      * skips drawing if the new color is nearly equal to the background.
      */
@@ -258,6 +260,7 @@ public class Renderer {
         }
     }
 
+
     private int[] projectPointToScreen(int[] p) {
         if (p[3] <= 0) return null;
         int x = FixedBaseMath.q24_8_div(p[0], p[3]);
@@ -295,25 +298,25 @@ public class Renderer {
         int b1 = color1 & 0xFF;
 
         int a = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(
-                FixedBaseMath.toQ24_8(a0),
-                FixedBaseMath.q24_8_mul(
-                    FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(a1), FixedBaseMath.toQ24_8(a0)),
-                    zRatio)));
+                    FixedBaseMath.toQ24_8(a0),
+                    FixedBaseMath.q24_8_mul(
+                        FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(a1), FixedBaseMath.toQ24_8(a0)),
+                        zRatio)));
         int r = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(
-                FixedBaseMath.toQ24_8(r0),
-                FixedBaseMath.q24_8_mul(
-                    FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(r1), FixedBaseMath.toQ24_8(r0)),
-                    zRatio)));
+                    FixedBaseMath.toQ24_8(r0),
+                    FixedBaseMath.q24_8_mul(
+                        FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(r1), FixedBaseMath.toQ24_8(r0)),
+                        zRatio)));
         int g = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(
-                FixedBaseMath.toQ24_8(g0),
-                FixedBaseMath.q24_8_mul(
-                    FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(g1), FixedBaseMath.toQ24_8(g0)),
-                    zRatio)));
+                    FixedBaseMath.toQ24_8(g0),
+                    FixedBaseMath.q24_8_mul(
+                        FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(g1), FixedBaseMath.toQ24_8(g0)),
+                        zRatio)));
         int b = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(
-                FixedBaseMath.toQ24_8(b0),
-                FixedBaseMath.q24_8_mul(
-                    FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(b1), FixedBaseMath.toQ24_8(b0)),
-                    zRatio)));
+                    FixedBaseMath.toQ24_8(b0),
+                    FixedBaseMath.q24_8_mul(
+                        FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(b1), FixedBaseMath.toQ24_8(b0)),
+                        zRatio)));
 
         if (a < 0) a = 0; else if (a > 255) a = 255;
         if (r < 0) r = 0; else if (r > 255) r = 255;
