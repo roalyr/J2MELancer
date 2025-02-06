@@ -55,49 +55,24 @@ public class Renderer {
         }
     }
 
-    public void renderSceneEdges(Graphics g, int[] viewMatrix) {
-        int localWidth = width, localHeight = height;
-        //for (int i = 0; i < renderables.size(); i++) {
-        //    SceneObject obj = (SceneObject) renderables.elementAt(i);
-        //    obj.depth = calculateObjectDepth(obj, viewMatrix);
-        //}
-        //sortRenderablesByDepth();
-        
-        //localTransformCache.clear();
-
+    public void renderScene(Graphics g, int[] viewMatrix) {
         for (int i = 0; i < renderables.size(); i++) {
             SceneObject obj = (SceneObject) renderables.elementAt(i);
             int[] local = getLocalTransform(obj);
             int[] finalMatrix = FixedMatMath.multiply4x4(viewMatrix, local);
-            drawEdges(finalMatrix, obj.model);
+            // Decide if we draw edges or vertices based on obj.material.renderType:
+            if (obj.material != null && obj.material.renderType == 0) {
+                // draw as vertices
+                drawVertices(finalMatrix, obj);
+            } else {
+                // default: draw edges
+                drawEdges(finalMatrix, obj);
+            }
         }
-        g.drawRGB(frameBuffer, 0, localWidth, 0, 0, localWidth, localHeight, true);
-        updateFPS();
-        printFPS(g);
+        g.drawRGB(frameBuffer, 0, width, 0, 0, width, height, true);
     }
 
-    public void renderSceneVertices(Graphics g, int[] viewMatrix) {
-        int localWidth = width, localHeight = height;
-        //for (int i = 0; i < renderables.size(); i++) {
-        //    SceneObject obj = (SceneObject) renderables.elementAt(i);
-        //    obj.depth = calculateObjectDepth(obj, viewMatrix);
-        //}
-        //sortRenderablesByDepth();
-        
-        //localTransformCache.clear();
-
-        for (int i = 0; i < renderables.size(); i++) {
-            SceneObject obj = (SceneObject) renderables.elementAt(i);
-            int[] local = getLocalTransform(obj);
-            int[] finalMatrix = FixedMatMath.multiply4x4(viewMatrix, local);
-            drawVertices(finalMatrix, obj.model);
-        }
-        g.drawRGB(frameBuffer, 0, localWidth, 0, 0, localWidth, localHeight, true);
-        //updateFPS();
-        //printFPS(g);
-    }
-
-    private void updateFPS() {
+    public void updateFPS() {
         framesRendered++;
         long currentTime = System.currentTimeMillis();
         if (currentTime - fpsStartTime >= 1000) {
@@ -107,7 +82,7 @@ public class Renderer {
         }
     }
 
-    private void printFPS(Graphics g) {
+    public void printFPS(Graphics g) {
         g.setColor(0xFFFFFFFF);
         String fpsText = "FPS: " + currentFPS + " Renderables: " + renderables.size();
         g.drawString(fpsText, 2, 2, Graphics.TOP | Graphics.LEFT);
@@ -127,84 +102,101 @@ public class Renderer {
         return local;
     }
 
-    private int calculateObjectDepth(SceneObject obj, int[] viewMatrix) {
-        int[] worldCenter = new int[]{obj.tx, obj.ty, obj.tz, FixedBaseMath.toQ24_8(1.0f)};
-        FixedMatMath.transformPoint(viewMatrix, worldCenter, scratch4a);
-        return scratch4a[2];
-    }
+    private void drawEdges(int[] finalM, SceneObject obj) {
+        Material mat = obj.material;
 
-    private void sortRenderablesByDepth() {
-        int n = renderables.size();
-        if (n <= 1) {
-            return;
-        }
-        SceneObject[] arr = new SceneObject[n];
-        for (int i = 0; i < n; i++) {
-            arr[i] = (SceneObject) renderables.elementAt(i);
-        }
-        for (int i = 1; i < n; i++) {
-            SceneObject key = arr[i];
-            int left = 0, right = i;
-            while (left < right) {
-                int mid = (left + right) / 2;
-                if (arr[mid].depth < key.depth) {
-                    right = mid;
-                } else {
-                    left = mid + 1;
-                }
-            }
-            for (int j = i; j > left; j--) {
-                arr[j] = arr[j - 1];
-            }
-            arr[left] = key;
-        }
-        renderables.removeAllElements();
-        for (int i = 0; i < n; i++) {
-            renderables.addElement(arr[i]);
-        }
-    }
+        int[][] edges = obj.model.edges;
+        int[][] verts = obj.model.vertices;
 
-    private void drawEdges(int[] finalM, ModelQ24_8 model) {
-        int nearPlaneZ = FixedBaseMath.toQ24_8(0f);
-        int farPlaneZ = FixedBaseMath.toQ24_8(1f);
-        int nearColor = 0xFFFF00FF;
-        int farColor = 0x1100FF00;
-        float exponent = 5.0f;
-        int[][] edges = model.edges;
-        int[][] verts = model.vertices;
+        int nearQ = mat.nearMarginQ24_8;
+        int farQ = mat.farMarginQ24_8;
+        int fadeQ = mat.fadeDistanceQ24_8;
+        int nearColor = mat.colorNear;
+        int farColor = mat.colorFar;
+        float exponent = mat.colorExponent;
 
         // Draw edges
         for (int i = 0; i < edges.length; i++) {
             int i0 = edges[i][0];
             int i1 = edges[i][1];
 
+            // e.g. in drawEdges(...):
             FixedMatMath.transformPoint(finalM, verts[i0], scratch4a);
             FixedMatMath.transformPoint(finalM, verts[i1], scratch4b);
-            if (scratch4a[3] == 0 || scratch4b[3] == 0) {
-                continue;
-            }
-            int[] screenP0 = projectPointToScreen(scratch4a);
-            int[] screenP1 = projectPointToScreen(scratch4b);
+
+            int[] screenP0 = projectPointToScreen(scratch4a); // for (x,y)
+
+            int[] screenP1 = projectPointToScreen(scratch4b); // for (x,y)
+
             if (screenP0 == null || screenP1 == null) {
+                continue; // clipped
+
+            }
+
+            // camera-space z (or distance). 
+            // If your camera is looking down -Z, do distance = -scratch4a[2].
+            int distA = scratch4a[2];
+            int distB = scratch4b[2];
+
+            // For the edge color, pick the midpoint distance:
+            int distMid = FixedBaseMath.q24_8_div(
+                    FixedBaseMath.q24_8_add(distA, distB),
+                    FixedBaseMath.toQ24_8(2.0f));
+
+            // Get alpha fade from near..far
+            int alpha = computeFadeAlpha(distMid, nearQ, farQ, fadeQ);
+
+            // If alpha=0 => skip drawing
+            if (alpha <= 0) {
                 continue;
             }
-            int z = FixedBaseMath.q24_8_add(screenP0[2], screenP1[2]);
-            z = FixedBaseMath.q24_8_div(z, FixedBaseMath.toQ24_8(2f));
-            int blendedColor = interpolateColor(z, nearPlaneZ, farPlaneZ, nearColor, farColor, exponent);
-            drawLine(screenP0[0], screenP0[1], screenP1[0], screenP1[1], blendedColor);
+
+            // Optionally, compute a color gradient for RGB:
+            int blendedRGB = interpolateColor(
+                    distMid,
+                    nearQ,
+                    farQ,
+                    nearColor,
+                    farColor,
+                    exponent);
+            // That returns an ARGB but you can ignore its alpha for now
+            // We'll override alpha with our fade alpha
+            int r = (blendedRGB >> 16) & 0xFF;
+            int g = (blendedRGB >> 8) & 0xFF;
+            int b = (blendedRGB) & 0xFF;
+
+            int finalColor = (alpha << 24) | (r << 16) | (g << 8) | b;
+
+            drawLine(screenP0[0], screenP0[1], screenP1[0], screenP1[1], finalColor);
         }
     }
+    private static final int ALPHA_THRESHOLD = 10;
 
     private void drawLine(int x0, int y0, int x1, int y1, int color) {
+        int alpha = (color >> 24) & 0xFF;
+
+        if (alpha < ALPHA_THRESHOLD) {
+            // Alpha is very low, skip drawing entirely
+            System.out.print(alpha + "\n");
+            return;
+        }
+
+
+
         int localWidth = width;
         int localHeight = height;
+
+        // Optional: if color == BACKGROUND_COLOR, skip as well
         if (color == BACKGROUND_COLOR) {
             return;
         }
+
+        // Basic clip check for the entire line
         if ((x0 < 0 && x1 < 0) || (x0 >= localWidth && x1 >= localWidth) ||
                 (y0 < 0 && y1 < 0) || (y0 >= localHeight && y1 >= localHeight)) {
             return;
         }
+
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = (x0 < x1) ? 1 : -1;
@@ -214,7 +206,7 @@ public class Renderer {
         while (true) {
             if (x0 >= 0 && x0 < localWidth && y0 >= 0 && y0 < localHeight) {
                 int index = y0 * localWidth + x0;
-                frameBuffer[index] = blendPixel(frameBuffer[index], color, (color >> 24) & 0xFF);
+                frameBuffer[index] = blendPixel(frameBuffer[index], color, alpha);
             }
             if (x0 == x1 && y0 == y1) {
                 break;
@@ -231,26 +223,64 @@ public class Renderer {
         }
     }
 
-    private void drawVertices(int[] finalM, ModelQ24_8 model) {
-        int nearPlaneZ = FixedBaseMath.toQ24_8(0f);
-        int farPlaneZ = FixedBaseMath.toQ24_8(1f);
-        int nearColor = 0xFFFF0000;
-        int farColor = 0x110000FF;
-        float exponent = 5.0f;
-        int[][] verts = model.vertices;
-
-        // Draw vertices
-        for (int v = 0; v < verts.length; v++) {
-            FixedMatMath.transformPoint(finalM, verts[v], scratch4a);
-            int[] screenV = projectPointToScreen(scratch4a);
-            if (screenV == null) {
-                continue;
-            }
-            int z = screenV[2];
-            int blendedColor = interpolateColor(z, nearPlaneZ, farPlaneZ, nearColor, farColor, exponent);
-            drawVertex(screenV[0], screenV[1], blendedColor);
-        }
+    private void drawVertices(int[] finalM, SceneObject obj) {
+    // Grab material data
+    Material mat = obj.material;
+    if (mat == null) {
+        return; // or use defaults
     }
+
+    int nearQ  = mat.nearMarginQ24_8;
+    int farQ   = mat.farMarginQ24_8;
+    int fadeQ  = mat.fadeDistanceQ24_8;
+    int nearColor = mat.colorNear;
+    int farColor  = mat.colorFar;
+    float exponent = mat.colorExponent;
+
+    int[][] verts = obj.model.vertices;
+
+    for (int v = 0; v < verts.length; v++) {
+        // Transform the vertex into camera space
+        FixedMatMath.transformPoint(finalM, verts[v], scratch4a);
+
+        // Next, do the same 2D projection but ignore the z part from projectPointToScreen()
+        // We'll compute "screen coords" for x,y but skip the normalized z
+        int[] screenV = projectPointToScreen(scratch4a);
+        if (screenV == null) {
+            // vertex is clipped, skip
+            continue;
+        }
+        int sx = screenV[0];
+        int sy = screenV[1];
+
+        // Instead of using screenV[2] for color, we use *actual camera distance*
+        // If your camera faces -Z, you might do:
+        //   dist = -scratch4a[2]
+        // or if your camera faces +Z, do dist = scratch4a[2].
+        // This must match the sign convention you used in drawEdges.
+        int dist = scratch4a[2];  // or -scratch4a[2], whichever you used in drawEdges
+
+        // 1) Compute alpha fade
+        int alpha = computeFadeAlpha(dist, nearQ, farQ, fadeQ);
+        if (alpha <= 0) {
+            // fully transparent, skip drawing
+            continue;
+        }
+
+        // 2) Compute color gradient for RGB
+        int blendedRGB = interpolateColor(dist, nearQ, farQ, nearColor, farColor, exponent);
+        // extract channels
+        int r = (blendedRGB >> 16) & 0xFF;
+        int g = (blendedRGB >> 8)  & 0xFF;
+        int b =  blendedRGB        & 0xFF;
+
+        // 3) Combine alpha + RGB
+        int finalColor = (alpha << 24) | (r << 16) | (g << 8) | b;
+
+        // 4) Draw the vertex with finalColor
+        drawVertex(sx, sy, finalColor);
+    }
+}
 
     private void drawVertex(int x, int y, int color) {
         final int templateSize = TEMPLATE_SIZE;
@@ -394,54 +424,77 @@ public class Renderer {
         return (sumA << 24) | (sumR << 16) | (sumG << 8) | sumB;
     }
 
-    private int interpolateColor(int z, int z0, int z1, int color0, int color1, float exponent) {
-        if (z0 == z1) {
+    /**
+     * Interpolates between color0 and color1 based on (z - z0) / (z1 - z0).
+     * @param z       The current distance in Q24.8
+     * @param z0      The near distance in Q24.8
+     * @param z1      The far distance in Q24.8
+     * @param color0  The ARGB color at z0
+     * @param color1  The ARGB color at z1
+     * @param exponent The exponent for easing (1.0 = linear, >1 = bias near, <1 = bias far, etc.)
+     * @return         The blended ARGB color
+     */
+    private int interpolateColor(int z, int z0, int z1,
+            int color0, int color1,
+            float exponent) {
+        // 1) Compute (z - z0) / (z1 - z0) in Q24.8
+        int rangeQ = FixedBaseMath.q24_8_sub(z1, z0);
+        if (rangeQ <= 0) {
+            // Degenerate case: if z1 <= z0, just return color1 or color0.
             return color1;
         }
-        int zRange = FixedBaseMath.q24_8_sub(z1, z0);
-        int zDist = FixedBaseMath.q24_8_sub(z, z0);
-        int zRatio = FixedBaseMath.q24_8_div(zDist, zRange);
-        if (zRatio < 0) {
-            zRatio = 0;
-        }
-        if (zRatio > FixedBaseMath.toQ24_8(1f)) {
-            zRatio = FixedBaseMath.toQ24_8(1f);
-        }
-        // final float exponent = 3.0f;  // Adjust exponent as needed
+        int distQ = FixedBaseMath.q24_8_sub(z, z0);
+        int ratioQ = FixedBaseMath.q24_8_div(distQ, rangeQ);
 
-        int adjustedRatio = FixedBaseMath.pow(zRatio, exponent);
+        // 2) Clamp ratioQ to [0..1] in Q24.8
+        if (ratioQ < 0) {
+            ratioQ = 0;
+        }
+        int oneQ = FixedBaseMath.toQ24_8(1.0f);
+        if (ratioQ > oneQ) {
+            ratioQ = oneQ;
+        }
 
-        // Reverse the gradient: start at color1 and interpolate to color0.
-        int a1 = (color1 >> 24) & 0xFF;
-        int r1 = (color1 >> 16) & 0xFF;
-        int g1 = (color1 >> 8) & 0xFF;
-        int b1 = color1 & 0xFF;
+        // 3) Apply the exponent via your fixed-point pow
+        int adjustedRatioQ = FixedBaseMath.pow(ratioQ, exponent);
+
+        // 4) Interpolate from color0 to color1 with adjustedRatioQ
+        //    ratio=0 => color0, ratio=1 => color1
         int a0 = (color0 >> 24) & 0xFF;
         int r0 = (color0 >> 16) & 0xFF;
         int g0 = (color0 >> 8) & 0xFF;
         int b0 = color0 & 0xFF;
 
-        int a = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(
-                FixedBaseMath.toQ24_8(a1),
-                FixedBaseMath.q24_8_mul(
-                FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(a0), FixedBaseMath.toQ24_8(a1)),
-                adjustedRatio)));
-        int r = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(
-                FixedBaseMath.toQ24_8(r1),
-                FixedBaseMath.q24_8_mul(
-                FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(r0), FixedBaseMath.toQ24_8(r1)),
-                adjustedRatio)));
-        int g = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(
-                FixedBaseMath.toQ24_8(g1),
-                FixedBaseMath.q24_8_mul(
-                FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(g0), FixedBaseMath.toQ24_8(g1)),
-                adjustedRatio)));
-        int b = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(
-                FixedBaseMath.toQ24_8(b1),
-                FixedBaseMath.q24_8_mul(
-                FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(b0), FixedBaseMath.toQ24_8(b1)),
-                adjustedRatio)));
+        int a1 = (color1 >> 24) & 0xFF;
+        int r1 = (color1 >> 16) & 0xFF;
+        int g1 = (color1 >> 8) & 0xFF;
+        int b1 = color1 & 0xFF;
 
+        // For each channel: result = c0 + (c1 - c0)*adjustedRatio
+        // But we must do it in Q24.8 form:
+        int deltaA = a1 - a0;
+        int deltaR = r1 - r0;
+        int deltaG = g1 - g0;
+        int deltaB = b1 - b0;
+
+        int a = a0 + FixedBaseMath.toInt(
+                FixedBaseMath.q24_8_mul(
+                FixedBaseMath.toQ24_8(deltaA),
+                adjustedRatioQ));
+        int r = r0 + FixedBaseMath.toInt(
+                FixedBaseMath.q24_8_mul(
+                FixedBaseMath.toQ24_8(deltaR),
+                adjustedRatioQ));
+        int g = g0 + FixedBaseMath.toInt(
+                FixedBaseMath.q24_8_mul(
+                FixedBaseMath.toQ24_8(deltaG),
+                adjustedRatioQ));
+        int b = b0 + FixedBaseMath.toInt(
+                FixedBaseMath.q24_8_mul(
+                FixedBaseMath.toQ24_8(deltaB),
+                adjustedRatioQ));
+
+        // 5) Clamp channels to [0..255] (in case exponent overshoots, etc.)
         if (a < 0) {
             a = 0;
         } else if (a > 255) {
@@ -461,7 +514,78 @@ public class Renderer {
             b = 0;
         } else if (b > 255) {
             b = 255;
+
+        // Combine into ARGB
         }
-        return (a << 24) | (r << 16) | (g << 8) | b;
+        int finalColorARGB = (a << 24) | (r << 16) | (g << 8) | b;
+
+        return finalColorARGB;
+    }
+
+    /**
+     * Computes a piecewise alpha fade 0..1..0 based on distance in [zNear..zFar].
+     * - alpha=0 if z < near or z > far
+     * - alpha=1 in [near+fadeDist .. far-fadeDist]
+     * - between these, alpha ramps linearly from 0..1 or 1..0
+     *
+     * If fadeDist==0, we get a sharp cutoff: alpha=0 outside, alpha=255 inside.
+     */
+    private int computeFadeAlpha(int z, int nearQ, int farQ, int fadeQ) {
+        // If behind near or beyond far => alpha=0
+        if (z < nearQ || z > farQ) {
+            return 0;
+        }
+
+        // If fadeDist=0 => skip fade logic: full opacity inside [near..far]
+        if (fadeQ <= 0) {
+            return 255;
+        }
+
+        // Region A: [near .. near+fadeDist] -> alpha 0..1
+        int nearPlusFade = FixedBaseMath.q24_8_add(nearQ, fadeQ);
+        if (z <= nearPlusFade) {
+            // ratio = (z - near) / fadeDist
+            int dz = FixedBaseMath.q24_8_sub(z, nearQ);
+            int ratioQ = FixedBaseMath.q24_8_div(dz, fadeQ);
+            if (ratioQ < 0) {
+                ratioQ = 0;
+            }
+            if (ratioQ > FixedBaseMath.toQ24_8(1.0f)) {
+                ratioQ = FixedBaseMath.toQ24_8(1.0f);
+            }
+            return ratioQToAlpha(ratioQ);
+        }
+
+        // Region B: [far - fadeDist .. far] -> alpha 1..0
+        int farMinusFade = FixedBaseMath.q24_8_sub(farQ, fadeQ);
+        if (z >= farMinusFade) {
+            // ratio = (far - z) / fadeDist
+            int dz = FixedBaseMath.q24_8_sub(farQ, z);
+            int ratioQ = FixedBaseMath.q24_8_div(dz, fadeQ);
+            if (ratioQ < 0) {
+                ratioQ = 0;
+            }
+            if (ratioQ > FixedBaseMath.toQ24_8(1.0f)) {
+                ratioQ = FixedBaseMath.toQ24_8(1.0f);
+            }
+            return ratioQToAlpha(ratioQ);
+        }
+
+        // Region C: everything else => alpha=255
+        return 255;
+    }
+
+    /** Helper: ratio in [0..1] (Q24.8) => alpha in [0..255]. */
+    private int ratioQToAlpha(int ratioQ) {
+        // alpha = ratio * 255
+        int alphaQ = FixedBaseMath.q24_8_mul(ratioQ, FixedBaseMath.toQ24_8(255.0f));
+        int alphaI = FixedBaseMath.toInt(alphaQ);
+        if (alphaI < 0) {
+            alphaI = 0;
+        }
+        if (alphaI > 255) {
+            alphaI = 255;
+        }
+        return alphaI;
     }
 }
