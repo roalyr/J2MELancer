@@ -177,7 +177,7 @@ public class Renderer {
 
         if (alpha < ALPHA_THRESHOLD) {
             // Alpha is very low, skip drawing entirely
-            System.out.print(alpha + "\n");
+            // System.out.print(alpha + "\n");
             return;
         }
 
@@ -588,4 +588,6 @@ public class Renderer {
         }
         return alphaI;
     }
+    
+    
 }

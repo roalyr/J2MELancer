@@ -86,6 +86,49 @@ public final class FixedMatMath {
     }
 
     // ---------------------------
+    // Create Rotation Matrix about an Arbitrary Axis
+    // ---------------------------
+    public static int[] createRotationAroundAxis4x4(int[] axis, int angleQ24_8) {
+        // Normalize the axis vector using FixedVecMath (assumes axis is a 3-element Q24.8 vector)
+        int[] nAxis = FixedVecMath.q24_8_normalize(axis);
+        int x = nAxis[0];
+        int y = nAxis[1];
+        int z = nAxis[2];
+
+        int cosQ = FixedTrigMath.cos(angleQ24_8);
+        int sinQ = FixedTrigMath.sin(angleQ24_8);
+        int t = ONE - cosQ;
+
+        int[] m = new int[16];
+
+        // First row
+        m[0] = cosQ + FixedBaseMath.q24_8_mul(t, FixedBaseMath.q24_8_mul(x, x));
+        m[1] = FixedBaseMath.q24_8_mul(t, FixedBaseMath.q24_8_mul(x, y)) - FixedBaseMath.q24_8_mul(sinQ, z);
+        m[2] = FixedBaseMath.q24_8_mul(t, FixedBaseMath.q24_8_mul(x, z)) + FixedBaseMath.q24_8_mul(sinQ, y);
+        m[3] = 0;
+
+        // Second row
+        m[4] = FixedBaseMath.q24_8_mul(t, FixedBaseMath.q24_8_mul(x, y)) + FixedBaseMath.q24_8_mul(sinQ, z);
+        m[5] = cosQ + FixedBaseMath.q24_8_mul(t, FixedBaseMath.q24_8_mul(y, y));
+        m[6] = FixedBaseMath.q24_8_mul(t, FixedBaseMath.q24_8_mul(y, z)) - FixedBaseMath.q24_8_mul(sinQ, x);
+        m[7] = 0;
+
+        // Third row
+        m[8]  = FixedBaseMath.q24_8_mul(t, FixedBaseMath.q24_8_mul(x, z)) - FixedBaseMath.q24_8_mul(sinQ, y);
+        m[9]  = FixedBaseMath.q24_8_mul(t, FixedBaseMath.q24_8_mul(y, z)) + FixedBaseMath.q24_8_mul(sinQ, x);
+        m[10] = cosQ + FixedBaseMath.q24_8_mul(t, FixedBaseMath.q24_8_mul(z, z));
+        m[11] = 0;
+
+        // Fourth row
+        m[12] = 0;
+        m[13] = 0;
+        m[14] = 0;
+        m[15] = ONE;
+
+        return m;
+    }
+
+    // ---------------------------
     // 4x4 Matrix Multiplication (Unrolled)
     // ---------------------------
     public static int[] multiply4x4(int[] m1, int[] m2) {
@@ -231,6 +274,30 @@ public final class FixedMatMath {
             }
             System.out.println("]");
         }
+    }
+    
+    // ---------------------------
+    // Transpose Matrix
+    // ---------------------------
+    public static int[] transpose(int[] m) {
+        int[] t = new int[16];
+        t[0]  = m[0];
+        t[1]  = m[4];
+        t[2]  = m[8];
+        t[3]  = m[12];
+        t[4]  = m[1];
+        t[5]  = m[5];
+        t[6]  = m[9];
+        t[7]  = m[13];
+        t[8]  = m[2];
+        t[9]  = m[6];
+        t[10] = m[10];
+        t[11] = m[14];
+        t[12] = m[3];
+        t[13] = m[7];
+        t[14] = m[11];
+        t[15] = m[15];
+        return t;
     }
 
     private FixedMatMath() {

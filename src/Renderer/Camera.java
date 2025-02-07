@@ -1,26 +1,39 @@
 package Renderer;
 
-import FixedMath.*;
+import FixedMath.FixedMatMath;
+import FixedMath.FixedBaseMath;
+import FixedMath.FixedQuatMath;
 
 public class Camera {
 
-    private int[] cameraMatrix;
-    private int[] position;  // Camera position (x, y, z) in Q24.8
-    private int[] rotation;  // Camera rotation (Euler angles: x, y, z) in Q24.8
-    private int[] upVector; // Camera up vector (x, y, z) in Q24.8
-
+    private int[] viewMatrix; // The view matrix (inverse of world transform)
+    private int[] position;   // Position in world space (Q24.8)
+    // Orientation as a quaternion [x, y, z, w] in Q24.8
+    private int[] orientation;
 
     public Camera() {
-        cameraMatrix = FixedMatMath.createIdentity4x4();
-        position = new int[]{0, 0, 0}; // Initially at origin
-        rotation = new int[]{0, 0, 0}; // Initially no rotation
-        upVector = new int[]{0, FixedBaseMath.toQ24_8(1.0f), 0}; // Y-axis is often "up"
-
+        viewMatrix = FixedMatMath.createIdentity4x4();
+        position = new int[]{0, 0, 0};
+        // Identity quaternion: no rotation.
+        orientation = new int[]{0, 0, 0, FixedBaseMath.toQ24_8(1.0f)};
     }
 
-    public int[] getCameraMatrix() {
-        updateCameraMatrix(); // Update matrix before returning
-        return cameraMatrix;
+    // Returns the view matrix used for rendering.
+    public int[] getViewMatrix() {
+        updateViewMatrix();
+        return viewMatrix;
+    }
+
+    // Computes the view matrix as R^T * T(-position), where R is derived from the orientation.
+    private void updateViewMatrix() {
+        int[] rotMatrix = FixedQuatMath.toRotationMatrix(orientation);
+        int[] rotMatrixT = FixedMatMath.transpose(rotMatrix);
+        int[] trans = FixedMatMath.createTranslation4x4(-position[0], -position[1], -position[2]);
+        viewMatrix = FixedMatMath.multiply4x4(rotMatrixT, trans);
+    }
+
+    public int[] getPosition() {
+        return position;
     }
 
     public void setPosition(int x, int y, int z) {
@@ -29,42 +42,78 @@ public class Camera {
         position[2] = z;
     }
 
-    public void setRotation(int rotX, int rotY, int rotZ) {
-        rotation[0] = rotX;
-        rotation[1] = rotY;
-        rotation[2] = rotZ;
+    public int[] getOrientation() {
+        return orientation;
     }
 
-    // Methods to update the camera's position, orientation, etc.
-    public void translate(int tx, int ty, int tz) {
-        position[0] += tx;
-        position[1] += ty;
-        position[2] += tz;
+    public void setOrientation(int[] q) {
+        orientation = q;
     }
 
-    public void rotate(int rotX, int rotY, int rotZ) {
-        rotation[0] += rotX;
-        rotation[1] += rotY;
-        rotation[2] += rotZ;
+    // --- Adjusted Controls: Pitch and Yaw are applied relative to the camera's local (canonical) axes ---
+
+    // Applies a yaw rotation (rotation about the local up axis).
+    // Uses the canonical local up vector [0, 1, 0] in camera space.
+    public void addYaw(int angleQ) {
+        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{0, FixedBaseMath.toQ24_8(1.0f), 0}, angleQ);
+        // Right-multiply to apply rotation in the local coordinate system.
+        orientation = FixedQuatMath.multiply(orientation, delta);
+        orientation = FixedQuatMath.normalize(orientation);
     }
 
-    private void updateCameraMatrix() {
-        // 1. Reset to the identity matrix
-        cameraMatrix = FixedMatMath.createIdentity4x4();
-
-        // 2. Apply rotation (consider adjusting order if needed)
-        int[] rotXMatrix = FixedMatMath.createRotationX4x4(rotation[0]);
-        int[] rotYMatrix = FixedMatMath.createRotationY4x4(rotation[1]);
-        int[] rotZMatrix = FixedMatMath.createRotationZ4x4(rotation[2]);
-
-        cameraMatrix = FixedMatMath.multiply4x4(cameraMatrix, rotZMatrix); // Z
-        cameraMatrix = FixedMatMath.multiply4x4(cameraMatrix, rotYMatrix); // Y
-        cameraMatrix = FixedMatMath.multiply4x4(cameraMatrix, rotXMatrix); // X
-
-        // 3. Apply translation
-        int[] translationMatrix = FixedMatMath.createTranslation4x4(-position[0], -position[1], -position[2]);
-        cameraMatrix = FixedMatMath.multiply4x4(cameraMatrix, translationMatrix);
+    // Applies a pitch rotation (rotation about the local right axis).
+    // Uses the canonical local right vector [1, 0, 0] in camera space.
+    public void addPitch(int angleQ) {
+        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{FixedBaseMath.toQ24_8(1.0f), 0, 0}, angleQ);
+        // Right-multiply to apply rotation in the local coordinate system.
+        orientation = FixedQuatMath.multiply(orientation, delta);
+        orientation = FixedQuatMath.normalize(orientation);
     }
 
-    // ... other camera control methods ...
+    // (Optional) Applies a roll rotation about the local forward axis.
+    public void addRoll(int angleQ) {
+        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{0, 0, FixedBaseMath.toQ24_8(1.0f)}, angleQ);
+        orientation = FixedQuatMath.multiply(orientation, delta);
+        orientation = FixedQuatMath.normalize(orientation);
+    }
+
+    // Returns the current rotation matrix derived from the quaternion.
+    public int[] getRotationMatrix() {
+        return FixedQuatMath.toRotationMatrix(orientation);
+    }
+
+    // --- Translation Methods using current orientation ---
+
+    // Moves the camera along its local forward axis (canonical: [0, 0, -1]).
+    public void moveForward(int amount) {
+        int[] rot = getRotationMatrix();
+        int[] localForward = new int[]{0, 0, -FixedBaseMath.toQ24_8(1.0f), 0};
+        int[] worldForward = new int[4];
+        FixedMatMath.transformPoint(rot, localForward, worldForward);
+        position[0] = FixedBaseMath.q24_8_add(position[0], FixedBaseMath.q24_8_mul(worldForward[0], amount));
+        position[1] = FixedBaseMath.q24_8_add(position[1], FixedBaseMath.q24_8_mul(worldForward[1], amount));
+        position[2] = FixedBaseMath.q24_8_add(position[2], FixedBaseMath.q24_8_mul(worldForward[2], amount));
+    }
+
+    // Moves the camera along its local right axis (canonical: [1, 0, 0]).
+    public void moveRight(int amount) {
+        int[] rot = getRotationMatrix();
+        int[] localRight = new int[]{FixedBaseMath.toQ24_8(1.0f), 0, 0, 0};
+        int[] worldRight = new int[4];
+        FixedMatMath.transformPoint(rot, localRight, worldRight);
+        position[0] = FixedBaseMath.q24_8_add(position[0], FixedBaseMath.q24_8_mul(worldRight[0], amount));
+        position[1] = FixedBaseMath.q24_8_add(position[1], FixedBaseMath.q24_8_mul(worldRight[1], amount));
+        position[2] = FixedBaseMath.q24_8_add(position[2], FixedBaseMath.q24_8_mul(worldRight[2], amount));
+    }
+
+    // Moves the camera along its local up axis (canonical: [0, 1, 0]).
+    public void moveUp(int amount) {
+        int[] rot = getRotationMatrix();
+        int[] localUp = new int[]{0, FixedBaseMath.toQ24_8(1.0f), 0, 0};
+        int[] worldUp = new int[4];
+        FixedMatMath.transformPoint(rot, localUp, worldUp);
+        position[0] = FixedBaseMath.q24_8_add(position[0], FixedBaseMath.q24_8_mul(worldUp[0], amount));
+        position[1] = FixedBaseMath.q24_8_add(position[1], FixedBaseMath.q24_8_mul(worldUp[1], amount));
+        position[2] = FixedBaseMath.q24_8_add(position[2], FixedBaseMath.q24_8_mul(worldUp[2], amount));
+    }
 }
