@@ -134,8 +134,9 @@ public class Scene {
         renderer.renderScene(g, viewMatrix);
         renderer.updateFPS();
         renderer.printFPS(g);
-        
+
         FixedMatMath.releaseMatrix(viewMatrix);
+
     }
 
     private boolean isObjectVisible(SceneObject obj, int[] camMat) {
@@ -147,14 +148,12 @@ public class Scene {
         center[2] = obj.tz;
         center[3] = FixedBaseMath.toQ24_8(1.0f);
 
-
         FixedMatMath.transformPoint(camMat, center, centerCam);
         int cx = centerCam[0];
         int cy = centerCam[1];
         int cz = centerCam[2];
         int cw = centerCam[3];
         if (cw <= 0) {
-            FixedMatMath.releaseMatrix(camMat);
             FixedMatMath.releaseMatrix(center);
             FixedMatMath.releaseMatrix(centerCam);
             return false;
@@ -165,22 +164,19 @@ public class Scene {
         cz = FixedBaseMath.q24_8_mul(cz, invW);
         int distQ = -cz;
         int radius = -obj.boundingSphereRadiusScaled;
+
         // If the camera is inside the object's bounding sphere, consider the object visible.
         if (distQ >= radius) {
-            FixedMatMath.releaseMatrix(camMat);
             FixedMatMath.releaseMatrix(center);
             FixedMatMath.releaseMatrix(centerCam);
             return true;
-        //System.out.print("dist " + distQ + " radius " + radius + "\n");
         }
         if (FixedBaseMath.q24_8_add(distQ, radius) < nearQ) {
-            FixedMatMath.releaseMatrix(camMat);
             FixedMatMath.releaseMatrix(center);
             FixedMatMath.releaseMatrix(centerCam);
             return false;
         }
         if (FixedBaseMath.q24_8_sub(distQ, radius) > farQ) {
-            FixedMatMath.releaseMatrix(camMat);
             FixedMatMath.releaseMatrix(center);
             FixedMatMath.releaseMatrix(centerCam);
             return false;
@@ -192,7 +188,6 @@ public class Scene {
         int absCX = (cx < 0) ? -cx : cx;
         int lrLimit = FixedBaseMath.q24_8_mul(distQ, tanHalfHorizFovQ);
         if (FixedBaseMath.q24_8_add(absCX, radius) > lrLimit) {
-            FixedMatMath.releaseMatrix(camMat);
             FixedMatMath.releaseMatrix(center);
             FixedMatMath.releaseMatrix(centerCam);
             return false;
@@ -200,12 +195,10 @@ public class Scene {
         int absCY = (cy < 0) ? -cy : cy;
         int tbLimit = FixedBaseMath.q24_8_mul(distQ, tanHalfVertFovQ);
         if (FixedBaseMath.q24_8_add(absCY, radius) > tbLimit) {
-            FixedMatMath.releaseMatrix(camMat);
             FixedMatMath.releaseMatrix(center);
             FixedMatMath.releaseMatrix(centerCam);
             return false;
         }
-        FixedMatMath.releaseMatrix(camMat);
         FixedMatMath.releaseMatrix(center);
         FixedMatMath.releaseMatrix(centerCam);
         return true;
