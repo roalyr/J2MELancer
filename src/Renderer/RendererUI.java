@@ -1,0 +1,43 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package Renderer;
+
+import javax.microedition.lcdui.Graphics;
+
+/**
+ *
+ * @author ROAL
+ */
+public class RendererUI {
+
+    private String stringA;
+    private long fpsStartTime;
+    private int framesRendered;
+    private int currentFPS;
+
+    public RendererUI() {
+        fpsStartTime = System.currentTimeMillis();
+        framesRendered = 0;
+        currentFPS = 0;
+    }
+
+    public void updateFPS() {
+        framesRendered++;
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - fpsStartTime >= 1000) {
+            currentFPS = framesRendered;
+            framesRendered = 0;
+            fpsStartTime = currentTime;
+        }
+    }
+
+    public void printFPS(Graphics g) {
+        g.setColor(0xFFFFFFFF);
+        // int sx = (x0 < x1) ? 1 : -1;
+        int ren = SharedData.renderables_num;
+        stringA = "FPS: " + currentFPS + " Renderables: " + ren;
+        g.drawString(stringA, 2, 2, Graphics.TOP | Graphics.LEFT);
+    }
+}

@@ -10,6 +10,7 @@ public class Scene {
     private Vector objects;
     private Vector visibleObjects;
     private Renderer renderer;
+    private RendererUI rendererUI;
     private int fovQ,  aspectQ,  nearQ,  farQ;
     private int fovDegrees = 60;
     private static final int FOV_MIN = 10,  FOV_MAX = 120;
@@ -24,6 +25,7 @@ public class Scene {
         objects = new Vector(capacity);
         visibleObjects = new Vector(capacity);
         renderer = new Renderer();
+        rendererUI = new RendererUI();
 
         this.fovQ = fovQ;
         this.aspectQ = aspectQ;
@@ -132,8 +134,8 @@ public class Scene {
         }
         renderer.setRenderables(visibleObjects, SharedData.halfW_Q24_8, SharedData.halfH_Q24_8);
         renderer.renderScene(g, viewMatrix);
-        renderer.updateFPS();
-        renderer.printFPS(g);
+        rendererUI.updateFPS();
+        rendererUI.printFPS(g);
 
         FixedMatMath.releaseMatrix(viewMatrix);
 

@@ -11,5 +11,6 @@ public class SharedData {
     public static int halfW_Q24_8 = FixedBaseMath.toQ24_8(display_width /2);
     public static int halfH_Q24_8 = FixedBaseMath.toQ24_8(display_height /2);
 
+    public static int renderables_num = 0;
     
 }
