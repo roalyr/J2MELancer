@@ -15,7 +15,6 @@ public final class FixedMatMath {
     // Dynamic Object Pool for 4x4 Matrices (using Vector for Java 1.3)
     // ---------------------------
     private static final Vector matrixPool = new Vector();
-    // Maximum number of idle matrices to keep in the pool.
     private static final int MAX_IDLE_POOL_SIZE = 1024;
 
     /**
@@ -33,8 +32,8 @@ public final class FixedMatMath {
     }
 
     /**
-     * Releases a 4x4 matrix (an int[16]) back to the pool for reuse.
-     * After adding, the pool is trimmed if it exceeds MAX_IDLE_POOL_SIZE.
+     * Releases a 4x4 matrix (an int[16]) back to the pool.
+     * Extra matrices beyond MAX_IDLE_POOL_SIZE are trimmed.
      */
     public static synchronized void releaseMatrix(int[] m) {
         if (m == null || m.length != 16) {
@@ -173,10 +172,10 @@ public final class FixedMatMath {
             int m1_1 = m1[rBase + 1];
             int m1_2 = m1[rBase + 2];
             int m1_3 = m1[rBase + 3];
-            long sum0 = (long) m1_0 * m2[0] + (long) m1_1 * m2[4] + (long) m1_2 * m2[8] + (long) m1_3 * m2[12];
-            long sum1 = (long) m1_0 * m2[1] + (long) m1_1 * m2[5] + (long) m1_2 * m2[9] + (long) m1_3 * m2[13];
-            long sum2 = (long) m1_0 * m2[2] + (long) m1_1 * m2[6] + (long) m1_2 * m2[10] + (long) m1_3 * m2[14];
-            long sum3 = (long) m1_0 * m2[3] + (long) m1_1 * m2[7] + (long) m1_2 * m2[11] + (long) m1_3 * m2[15];
+            long sum0 = (long) m1_0 * m2[0]  + (long) m1_1 * m2[4]  + (long) m1_2 * m2[8]  + (long) m1_3 * m2[12];
+            long sum1 = (long) m1_0 * m2[1]  + (long) m1_1 * m2[5]  + (long) m1_2 * m2[9]  + (long) m1_3 * m2[13];
+            long sum2 = (long) m1_0 * m2[2]  + (long) m1_1 * m2[6]  + (long) m1_2 * m2[10] + (long) m1_3 * m2[14];
+            long sum3 = (long) m1_0 * m2[3]  + (long) m1_1 * m2[7]  + (long) m1_2 * m2[11] + (long) m1_3 * m2[15];
             r[rBase + 0] = (int) (sum0 >> Q24_8_SHIFT);
             r[rBase + 1] = (int) (sum1 >> Q24_8_SHIFT);
             r[rBase + 2] = (int) (sum2 >> Q24_8_SHIFT);
@@ -200,9 +199,9 @@ public final class FixedMatMath {
         for (int row = 0; row < 4; row++) {
             int base = row * 4;
             long sum = (long) m4x4[base + 0] * xyz[0] +
-                    (long) m4x4[base + 1] * xyz[1] +
-                    (long) m4x4[base + 2] * xyz[2] +
-                    (long) m4x4[base + 3] * w;
+                       (long) m4x4[base + 1] * xyz[1] +
+                       (long) m4x4[base + 2] * xyz[2] +
+                       (long) m4x4[base + 3] * w;
             out[row] = (int) (sum >> Q24_8_SHIFT);
         }
     }
@@ -215,8 +214,8 @@ public final class FixedMatMath {
         for (int row = 0; row < 3; row++) {
             int base = row * 4;
             long sum = (long) m[base + 0] * xyz[0] +
-                    (long) m[base + 1] * xyz[1] +
-                    (long) m[base + 2] * xyz[2];
+                       (long) m[base + 1] * xyz[1] +
+                       (long) m[base + 2] * xyz[2];
             out3[row] = (int) (sum >> Q24_8_SHIFT);
         }
         return out3;
@@ -300,9 +299,9 @@ public final class FixedMatMath {
         return m;
     }
 
-    // ---------------------------
-    // Print Matrix (for debugging)
-    // ---------------------------
+    /**
+     * Prints the matrix (for debugging).
+     */
     public static void printMatrix(int[] m) {
         for (int i = 0; i < 4; i++) {
             System.out.print("[");
@@ -316,9 +315,10 @@ public final class FixedMatMath {
         }
     }
 
-    // ---------------------------
-    // Transpose Matrix
-    // ---------------------------
+    /**
+     * Returns the transpose of matrix m.
+     * The returned matrix is acquired from the pool.
+     */
     public static int[] transpose(int[] m) {
         int[] t = acquireMatrix();
         t[0] = m[0];

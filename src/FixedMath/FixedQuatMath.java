@@ -9,7 +9,8 @@ public final class FixedQuatMath {
     private static final int MAX_IDLE_QUAT_POOL_SIZE = 1024;
 
     /**
-     * Acquires a quaternion (an int[4]) from the pool if available, or creates a new one.
+     * Acquires a quaternion (an int[4]) from the pool if available,
+     * or creates a new one.
      */
     public static synchronized int[] acquireQuaternion() {
         if (!quatPool.isEmpty()) {
@@ -23,7 +24,7 @@ public final class FixedQuatMath {
 
     /**
      * Releases a quaternion (an int[4]) back to the pool.
-     * If the pool exceeds MAX_IDLE_QUAT_POOL_SIZE, extra quaternions are trimmed.
+     * Extra quaternions beyond MAX_IDLE_QUAT_POOL_SIZE are trimmed.
      */
     public static synchronized void releaseQuaternion(int[] q) {
         if (q == null || q.length != 4) {
@@ -39,34 +40,35 @@ public final class FixedQuatMath {
      * Creates a quaternion from an axis-angle representation.
      * The axis is a 3-element vector in Q24.8 and angleQ24_8 is the rotation angle (in Q24.8 radians).
      * The resulting quaternion is in the form [x, y, z, w] in Q24.8.
+     * (The caller must later release the returned quaternion using releaseQuaternion().)
      */
     public static int[] fromAxisAngle(int[] axis, int angleQ24_8) {
-        // Compute half the angle (in Q24.8)
+        // Compute half the angle in Q24.8.
         int halfAngle = angleQ24_8 >> 1; // Divide by 2.
         int sinHalf = FixedTrigMath.sin(halfAngle);
         int cosHalf = FixedTrigMath.cos(halfAngle);
         // Normalize the axis.
+        // (Assume FixedVecMath.q24_8_normalize uses its own pooling if implemented)
         int[] normAxis = FixedVecMath.q24_8_normalize(axis);
         int x = FixedBaseMath.q24_8_mul(normAxis[0], sinHalf);
         int y = FixedBaseMath.q24_8_mul(normAxis[1], sinHalf);
         int z = FixedBaseMath.q24_8_mul(normAxis[2], sinHalf);
         int w = cosHalf;
+        // (If normAxis was acquired from a pool, the caller of normalize should release it.)
+        // Acquire a quaternion for the result.
         int[] q = acquireQuaternion();
         q[0] = x;
         q[1] = y;
         q[2] = z;
         q[3] = w;
+        FixedVecMath.releaseVector(normAxis);
         return q;
     }
 
     /**
      * Multiplies two quaternions.
-     * Both q1 and q2 are arrays of length 4 representing quaternions in Q24.8: [x, y, z, w].
-     * The multiplication is defined as:
-     *   q = q1 * q2 = [w1*x2 + x1*w2 + y1*z2 - z1*y2,
-     *                   w1*y2 - x1*z2 + y1*w2 + z1*x2,
-     *                   w1*z2 + x1*y2 - y1*x2 + z1*w2,
-     *                   w1*w2 - x1*x2 - y1*y2 - z1*z2]
+     * Both q1 and q2 are arrays of length 4 representing quaternions in Q24.8.
+     * The returned quaternion is acquired from the pool.
      */
     public static int[] multiply(int[] q1, int[] q2) {
         int x1 = q1[0], y1 = q1[1], z1 = q1[2], w1 = q1[3];
@@ -113,7 +115,8 @@ public final class FixedQuatMath {
     }
 
     /**
-     * Normalizes the quaternion q (array of 4 elements in Q24.8) to unit length.
+     * Normalizes the quaternion q (an int[4]) to unit length.
+     * The returned quaternion is acquired from the pool.
      */
     public static int[] normalize(int[] q) {
         long sumSq = (long) q[0] * q[0] + (long) q[1] * q[1] +
@@ -142,6 +145,7 @@ public final class FixedQuatMath {
     /**
      * Returns the conjugate of the quaternion q.
      * For q = [x, y, z, w], the conjugate is [-x, -y, -z, w].
+     * The returned quaternion is acquired from the pool.
      */
     public static int[] conjugate(int[] q) {
         int[] result = acquireQuaternion();
@@ -153,8 +157,9 @@ public final class FixedQuatMath {
     }
 
     /**
-     * Converts a normalized quaternion q (array of 4 elements in Q24.8) into a 4x4 rotation matrix.
-     * The resulting matrix is in column-major order.
+     * Converts a normalized quaternion q (an int[4] in Q24.8) into a 4x4 rotation matrix.
+     * The resulting matrix is acquired from FixedMatMath’s matrix pool.
+     * (The caller is responsible for releasing the returned matrix using FixedMatMath.releaseMatrix().)
      */
     public static int[] toRotationMatrix(int[] q) {
         int x = q[0], y = q[1], z = q[2], w = q[3];
@@ -170,7 +175,7 @@ public final class FixedQuatMath {
         int two = FixedBaseMath.toQ24_8(2.0f);
         int one = FixedBaseMath.toQ24_8(1.0f);
 
-        int[] m = FixedMatMath.acquireMatrix(); // 4x4 matrix; pooling for matrices is handled by FixedMatMath if desired.
+        int[] m = FixedMatMath.acquireMatrix();
         // First row
         m[0]  = one - FixedBaseMath.q24_8_mul(two, FixedBaseMath.q24_8_add(yy, zz));
         m[1]  = FixedBaseMath.q24_8_mul(two, FixedBaseMath.q24_8_sub(xy, wz));

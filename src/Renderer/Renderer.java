@@ -4,7 +4,6 @@ import javax.microedition.lcdui.Graphics;
 import FixedMath.FixedMatMath;
 import FixedMath.FixedBaseMath;
 import java.util.Vector;
-import java.util.Hashtable;
 import Constants.Common;
 
 public class Renderer {
@@ -34,6 +33,7 @@ public class Renderer {
     private int[] scratch4b = new int[4];
     private int[] screenP0;
     private int[] screenP1;
+    private String stringA;
 
     public Renderer() {
         this.width = SharedData.display_width;
@@ -97,8 +97,8 @@ public class Renderer {
 
     public void printFPS(Graphics g) {
         g.setColor(0xFFFFFFFF);
-        String fpsText = "FPS: " + currentFPS + " Renderables: " + renderables.size();
-        g.drawString(fpsText, 2, 2, Graphics.TOP | Graphics.LEFT);
+        stringA = "FPS: " + currentFPS + " Renderables: " + renderables.size();
+        g.drawString(stringA, 2, 2, Graphics.TOP | Graphics.LEFT);
     }
 
     private int[] getLocalTransform(SceneObject obj) {
