@@ -10,6 +10,9 @@ public class Camera {
     private int[] position;   // Position in world space (Q24.8)
     // Orientation as a quaternion [x, y, z, w] in Q24.8
     private int[] orientation;
+    private int[] rotMatrix;
+    private int[] rotMatrixT;
+    private int[] trans;
 
     public Camera() {
         viewMatrix = FixedMatMath.createIdentity4x4();
@@ -26,10 +29,15 @@ public class Camera {
 
     // Computes the view matrix as R^T * T(-position), where R is derived from the orientation.
     private void updateViewMatrix() {
-        int[] rotMatrix = FixedQuatMath.toRotationMatrix(orientation);
-        int[] rotMatrixT = FixedMatMath.transpose(rotMatrix);
-        int[] trans = FixedMatMath.createTranslation4x4(-position[0], -position[1], -position[2]);
+        rotMatrix = FixedQuatMath.toRotationMatrix(orientation);
+        rotMatrixT = FixedMatMath.transpose(rotMatrix);
+        trans = FixedMatMath.createTranslation4x4(-position[0], -position[1], -position[2]);
+        
         viewMatrix = FixedMatMath.multiply4x4(rotMatrixT, trans);
+        
+        FixedMatMath.releaseMatrix(rotMatrix);
+        FixedMatMath.releaseMatrix(rotMatrixT);
+        FixedMatMath.releaseMatrix(trans);
     }
 
     public int[] getPosition() {
@@ -93,6 +101,7 @@ public class Camera {
         position[0] = FixedBaseMath.q24_8_add(position[0], FixedBaseMath.q24_8_mul(worldForward[0], amount));
         position[1] = FixedBaseMath.q24_8_add(position[1], FixedBaseMath.q24_8_mul(worldForward[1], amount));
         position[2] = FixedBaseMath.q24_8_add(position[2], FixedBaseMath.q24_8_mul(worldForward[2], amount));
+        FixedMatMath.releaseMatrix(rot);
     }
 
     // Moves the camera along its local right axis (canonical: [1, 0, 0]).
@@ -104,6 +113,7 @@ public class Camera {
         position[0] = FixedBaseMath.q24_8_add(position[0], FixedBaseMath.q24_8_mul(worldRight[0], amount));
         position[1] = FixedBaseMath.q24_8_add(position[1], FixedBaseMath.q24_8_mul(worldRight[1], amount));
         position[2] = FixedBaseMath.q24_8_add(position[2], FixedBaseMath.q24_8_mul(worldRight[2], amount));
+        FixedMatMath.releaseMatrix(rot);
     }
 
     // Moves the camera along its local up axis (canonical: [0, 1, 0]).
@@ -115,5 +125,6 @@ public class Camera {
         position[0] = FixedBaseMath.q24_8_add(position[0], FixedBaseMath.q24_8_mul(worldUp[0], amount));
         position[1] = FixedBaseMath.q24_8_add(position[1], FixedBaseMath.q24_8_mul(worldUp[1], amount));
         position[2] = FixedBaseMath.q24_8_add(position[2], FixedBaseMath.q24_8_mul(worldUp[2], amount));
+        FixedMatMath.releaseMatrix(rot);
     }
 }

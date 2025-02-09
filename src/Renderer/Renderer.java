@@ -8,25 +8,32 @@ import Constants.Common;
 
 public class Renderer {
 
+    // Variables
     private final int BACKGROUND_COLOR = 0xFF000000;
-    private int[] frameBuffer;
     private int width;
     private int height;
-    private Vector renderables;
     private int precalc_halfW_Q24_8;
     private int precalc_halfH_Q24_8;
     private final int Z_NEAR_Q24_8;
     private final int Z_FAR_Q24_8;
-    private int[] scratch4a = new int[4];
-    private int[] scratch4b = new int[4];
-    private Hashtable localTransformCache = new Hashtable();
     private long fpsStartTime;
     private int framesRendered;
     private int currentFPS;
-    // Vertex template for drawing fuzzy vertices.
+    // Vertex template for drawing fuzzy vertices. TODO: move somewhere else
     private final int TEMPLATE_SIZE = 16;
     private final double TEMPLATE_EXP = 2.0;
     private final int[] vertexTemplate = createFuzzyCircleTemplate(TEMPLATE_SIZE, TEMPLATE_EXP);
+    // Reusable primitives
+    private Vector renderables;
+    private int[] frameBuffer;
+    private int[] scratch3a = new int[3];
+    private int[] scratch3b = new int[3];
+    private int[] scratch4a = new int[4];
+    private int[] scratch4b = new int[4];
+    private int[] screenP0;
+    private int[] screenP1;
+
+    private Hashtable localTransformCache = new Hashtable();
 
     public Renderer() {
         this.width = SharedData.display_width;
@@ -68,6 +75,8 @@ public class Renderer {
                 // default: draw edges
                 drawEdges(finalMatrix, obj);
             }
+            FixedMatMath.releaseMatrix(local);
+            FixedMatMath.releaseMatrix(finalMatrix);
         }
         g.drawRGB(frameBuffer, 0, width, 0, 0, width, height, true);
     }
@@ -124,9 +133,9 @@ public class Renderer {
             FixedMatMath.transformPoint(finalM, verts[i0], scratch4a);
             FixedMatMath.transformPoint(finalM, verts[i1], scratch4b);
 
-            int[] screenP0 = projectPointToScreen(scratch4a); // for (x,y)
+            screenP0 = projectPointToScreen(scratch3a, scratch4a); // for (x,y)
 
-            int[] screenP1 = projectPointToScreen(scratch4b); // for (x,y)
+            screenP1 = projectPointToScreen(scratch3b, scratch4b); // for (x,y)
 
             if (screenP0 == null || screenP1 == null) {
                 continue; // clipped
@@ -224,63 +233,64 @@ public class Renderer {
     }
 
     private void drawVertices(int[] finalM, SceneObject obj) {
-    // Grab material data
-    Material mat = obj.material;
-    if (mat == null) {
-        return; // or use defaults
-    }
+        // Grab material data
+        Material mat = obj.material;
+        if (mat == null) {
+            return; // or use defaults
 
-    int nearQ  = mat.nearMarginQ24_8;
-    int farQ   = mat.farMarginQ24_8;
-    int fadeQ  = mat.fadeDistanceQ24_8;
-    int nearColor = mat.colorNear;
-    int farColor  = mat.colorFar;
-    float exponent = mat.colorExponent;
-
-    int[][] verts = obj.model.vertices;
-
-    for (int v = 0; v < verts.length; v++) {
-        // Transform the vertex into camera space
-        FixedMatMath.transformPoint(finalM, verts[v], scratch4a);
-
-        // Next, do the same 2D projection but ignore the z part from projectPointToScreen()
-        // We'll compute "screen coords" for x,y but skip the normalized z
-        int[] screenV = projectPointToScreen(scratch4a);
-        if (screenV == null) {
-            // vertex is clipped, skip
-            continue;
-        }
-        int sx = screenV[0];
-        int sy = screenV[1];
-
-        // Instead of using screenV[2] for color, we use *actual camera distance*
-        // If your camera faces -Z, you might do:
-        //   dist = -scratch4a[2]
-        // or if your camera faces +Z, do dist = scratch4a[2].
-        // This must match the sign convention you used in drawEdges.
-        int dist = scratch4a[2];  // or -scratch4a[2], whichever you used in drawEdges
-
-        // 1) Compute alpha fade
-        int alpha = computeFadeAlpha(dist, nearQ, farQ, fadeQ);
-        if (alpha <= 0) {
-            // fully transparent, skip drawing
-            continue;
         }
 
-        // 2) Compute color gradient for RGB
-        int blendedRGB = interpolateColor(dist, nearQ, farQ, nearColor, farColor, exponent);
-        // extract channels
-        int r = (blendedRGB >> 16) & 0xFF;
-        int g = (blendedRGB >> 8)  & 0xFF;
-        int b =  blendedRGB        & 0xFF;
+        int nearQ = mat.nearMarginQ24_8;
+        int farQ = mat.farMarginQ24_8;
+        int fadeQ = mat.fadeDistanceQ24_8;
+        int nearColor = mat.colorNear;
+        int farColor = mat.colorFar;
+        float exponent = mat.colorExponent;
 
-        // 3) Combine alpha + RGB
-        int finalColor = (alpha << 24) | (r << 16) | (g << 8) | b;
+        int[][] verts = obj.model.vertices;
 
-        // 4) Draw the vertex with finalColor
-        drawVertex(sx, sy, finalColor);
+        for (int v = 0; v < verts.length; v++) {
+            // Transform the vertex into camera space
+            FixedMatMath.transformPoint(finalM, verts[v], scratch4a);
+
+            // Next, do the same 2D projection but ignore the z part from projectPointToScreen()
+            // We'll compute "screen coords" for x,y but skip the normalized z
+            int[] screenV = projectPointToScreen(scratch3a, scratch4a);
+            if (screenV == null) {
+                // vertex is clipped, skip
+                continue;
+            }
+            int sx = screenV[0];
+            int sy = screenV[1];
+
+            // Instead of using screenV[2] for color, we use *actual camera distance*
+            // If your camera faces -Z, you might do:
+            //   dist = -scratch4a[2]
+            // or if your camera faces +Z, do dist = scratch4a[2].
+            // This must match the sign convention you used in drawEdges.
+            int dist = scratch4a[2];  // or -scratch4a[2], whichever you used in drawEdges
+
+            // 1) Compute alpha fade
+            int alpha = computeFadeAlpha(dist, nearQ, farQ, fadeQ);
+            if (alpha <= 0) {
+                // fully transparent, skip drawing
+                continue;
+            }
+
+            // 2) Compute color gradient for RGB
+            int blendedRGB = interpolateColor(dist, nearQ, farQ, nearColor, farColor, exponent);
+            // extract channels
+            int r = (blendedRGB >> 16) & 0xFF;
+            int g = (blendedRGB >> 8) & 0xFF;
+            int b = blendedRGB & 0xFF;
+
+            // 3) Combine alpha + RGB
+            int finalColor = (alpha << 24) | (r << 16) | (g << 8) | b;
+
+            // 4) Draw the vertex with finalColor
+            drawVertex(sx, sy, finalColor);
+        }
     }
-}
 
     private void drawVertex(int x, int y, int color) {
         final int templateSize = TEMPLATE_SIZE;
@@ -367,7 +377,7 @@ public class Renderer {
         return template;
     }
 
-    private int[] projectPointToScreen(int[] p) {
+    private int[] projectPointToScreen(int[] r, int[] p) {
         if (p[3] <= 0) {
             return null;
         }
@@ -386,7 +396,11 @@ public class Renderer {
         } else if (z_mapped > FixedBaseMath.toQ24_8(1f)) {
             z_mapped = FixedBaseMath.toQ24_8(1f);
         }
-        return new int[]{sx, sy, z_mapped};
+        r[0] = sx;
+        r[1] = sy;
+        r[2] = z_mapped;
+        
+        return r;
     }
 
     private int blendPixel(int dstPixel, int srcPixel, int srcMaxAlpha) {
@@ -588,6 +602,4 @@ public class Renderer {
         }
         return alphaI;
     }
-    
-    
 }
