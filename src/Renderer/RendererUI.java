@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package Renderer;
 
 import javax.microedition.lcdui.Graphics;
@@ -31,7 +27,6 @@ public class RendererUI {
 
     public void printFPS(Graphics g) {
         g.setColor(0xFFFFFFFF);
-        // int sx = (x0 < x1) ? 1 : -1;
         int ren = SharedData.renderables_num;
         stringA = "FPS: " + currentFPS + " Renderables: " + ren;
         g.drawString(stringA, 2, 2, Graphics.TOP | Graphics.LEFT);

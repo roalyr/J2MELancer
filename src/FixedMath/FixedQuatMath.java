@@ -4,21 +4,20 @@ import java.util.Vector;
 
 public final class FixedQuatMath {
 
-    // Pool for quaternion arrays (each of length 4)
     private static final Vector quatPool = new Vector();
     private static final int MAX_IDLE_QUAT_POOL_SIZE = 1024;
 
-    public static synchronized int[] acquireQuaternion() {
+    public static synchronized long[] acquireQuaternion() {
         if (!quatPool.isEmpty()) {
             int size = quatPool.size();
-            int[] q = (int[]) quatPool.elementAt(size - 1);
+            long[] q = (long[]) quatPool.elementAt(size - 1);
             quatPool.removeElementAt(size - 1);
             return q;
         }
-        return new int[4];
+        return new long[4];
     }
 
-    public static synchronized void releaseQuaternion(int[] q) {
+    public static synchronized void releaseQuaternion(long[] q) {
         if (q == null || q.length != 4) {
             return;
         }
@@ -28,16 +27,16 @@ public final class FixedQuatMath {
         }
     }
 
-    public static int[] fromAxisAngle(int[] axis, int angle) {
-        int halfAngle = angle >> 1;
-        int sinHalf = FixedTrigMath.sin(halfAngle);
-        int cosHalf = FixedTrigMath.cos(halfAngle);
-        int[] normAxis = FixedVecMath.normalize(axis);
-        int x = FixedBaseMath.fixedMul(normAxis[0], sinHalf);
-        int y = FixedBaseMath.fixedMul(normAxis[1], sinHalf);
-        int z = FixedBaseMath.fixedMul(normAxis[2], sinHalf);
-        int w = cosHalf;
-        int[] q = acquireQuaternion();
+    public static long[] fromAxisAngle(long[] axis, long angle) {
+        long halfAngle = angle >> 1;
+        long sinHalf = FixedTrigMath.sin(halfAngle);
+        long cosHalf = FixedTrigMath.cos(halfAngle);
+        long[] normAxis = FixedVecMath.normalize(axis);
+        long x = FixedBaseMath.fixedMul(normAxis[0], sinHalf);
+        long y = FixedBaseMath.fixedMul(normAxis[1], sinHalf);
+        long z = FixedBaseMath.fixedMul(normAxis[2], sinHalf);
+        long w = cosHalf;
+        long[] q = acquireQuaternion();
         q[0] = x;
         q[1] = y;
         q[2] = z;
@@ -46,11 +45,11 @@ public final class FixedQuatMath {
         return q;
     }
 
-    public static int[] multiply(int[] q1, int[] q2) {
-        int x1 = q1[0], y1 = q1[1], z1 = q1[2], w1 = q1[3];
-        int x2 = q2[0], y2 = q2[1], z2 = q2[2], w2 = q2[3];
+    public static long[] multiply(long[] q1, long[] q2) {
+        long x1 = q1[0], y1 = q1[1], z1 = q1[2], w1 = q1[3];
+        long x2 = q2[0], y2 = q2[1], z2 = q2[2], w2 = q2[3];
 
-        int x = FixedBaseMath.fixedAdd(
+        long x = FixedBaseMath.fixedAdd(
                     FixedBaseMath.fixedAdd(
                         FixedBaseMath.fixedMul(w1, x2),
                         FixedBaseMath.fixedMul(x1, w2)),
@@ -58,7 +57,7 @@ public final class FixedQuatMath {
                         FixedBaseMath.fixedMul(y1, z2),
                         FixedBaseMath.fixedMul(z1, y2)));
 
-        int y = FixedBaseMath.fixedAdd(
+        long y = FixedBaseMath.fixedAdd(
                     FixedBaseMath.fixedAdd(
                         FixedBaseMath.fixedMul(w1, y2),
                         FixedBaseMath.fixedMul(y1, w2)),
@@ -66,7 +65,7 @@ public final class FixedQuatMath {
                         FixedBaseMath.fixedMul(z1, x2),
                         FixedBaseMath.fixedMul(x1, z2)));
 
-        int z = FixedBaseMath.fixedAdd(
+        long z = FixedBaseMath.fixedAdd(
                     FixedBaseMath.fixedAdd(
                         FixedBaseMath.fixedMul(w1, z2),
                         FixedBaseMath.fixedMul(z1, w2)),
@@ -74,7 +73,7 @@ public final class FixedQuatMath {
                         FixedBaseMath.fixedMul(x1, y2),
                         FixedBaseMath.fixedMul(y1, x2)));
 
-        int w = FixedBaseMath.fixedSub(
+        long w = FixedBaseMath.fixedSub(
                     FixedBaseMath.fixedSub(
                         FixedBaseMath.fixedMul(w1, w2),
                         FixedBaseMath.fixedMul(x1, x2)),
@@ -82,7 +81,7 @@ public final class FixedQuatMath {
                         FixedBaseMath.fixedMul(y1, y2),
                         FixedBaseMath.fixedMul(z1, z2)));
 
-        int[] result = acquireQuaternion();
+        long[] result = acquireQuaternion();
         result[0] = x;
         result[1] = y;
         result[2] = z;
@@ -90,23 +89,22 @@ public final class FixedQuatMath {
         return result;
     }
 
-    public static int[] normalize(int[] q) {
-        long sumSq = (long) q[0] * q[0] + (long) q[1] * q[1] +
-                     (long) q[2] * q[2] + (long) q[3] * q[3];
-        int mag = FixedBaseMath.sqrt((int)(sumSq >> FixedBaseMath.FIXED_SHIFT));
+    public static long[] normalize(long[] q) {
+        long sumSq = q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
+        long mag = FixedBaseMath.sqrt(sumSq >> FixedBaseMath.FIXED_SHIFT);
         if (mag == 0) {
-            int[] identity = acquireQuaternion();
+            long[] identity = acquireQuaternion();
             identity[0] = 0;
             identity[1] = 0;
             identity[2] = 0;
             identity[3] = FixedBaseMath.toFixed(1.0f);
             return identity;
         }
-        int normX = FixedBaseMath.fixedDiv(q[0], mag);
-        int normY = FixedBaseMath.fixedDiv(q[1], mag);
-        int normZ = FixedBaseMath.fixedDiv(q[2], mag);
-        int normW = FixedBaseMath.fixedDiv(q[3], mag);
-        int[] result = acquireQuaternion();
+        long normX = FixedBaseMath.fixedDiv(q[0], mag);
+        long normY = FixedBaseMath.fixedDiv(q[1], mag);
+        long normZ = FixedBaseMath.fixedDiv(q[2], mag);
+        long normW = FixedBaseMath.fixedDiv(q[3], mag);
+        long[] result = acquireQuaternion();
         result[0] = normX;
         result[1] = normY;
         result[2] = normZ;
@@ -114,8 +112,8 @@ public final class FixedQuatMath {
         return result;
     }
 
-    public static int[] conjugate(int[] q) {
-        int[] result = acquireQuaternion();
+    public static long[] conjugate(long[] q) {
+        long[] result = acquireQuaternion();
         result[0] = -q[0];
         result[1] = -q[1];
         result[2] = -q[2];
@@ -123,21 +121,21 @@ public final class FixedQuatMath {
         return result;
     }
 
-    public static int[] toRotationMatrix(int[] q) {
-        int x = q[0], y = q[1], z = q[2], w = q[3];
-        int xx = FixedBaseMath.fixedMul(x, x);
-        int yy = FixedBaseMath.fixedMul(y, y);
-        int zz = FixedBaseMath.fixedMul(z, z);
-        int xy = FixedBaseMath.fixedMul(x, y);
-        int xz = FixedBaseMath.fixedMul(x, z);
-        int yz = FixedBaseMath.fixedMul(y, z);
-        int wx = FixedBaseMath.fixedMul(w, x);
-        int wy = FixedBaseMath.fixedMul(w, y);
-        int wz = FixedBaseMath.fixedMul(w, z);
-        int two = FixedBaseMath.toFixed(2.0f);
-        int one = FixedBaseMath.toFixed(1.0f);
+    public static long[] toRotationMatrix(long[] q) {
+        long x = q[0], y = q[1], z = q[2], w = q[3];
+        long xx = FixedBaseMath.fixedMul(x, x);
+        long yy = FixedBaseMath.fixedMul(y, y);
+        long zz = FixedBaseMath.fixedMul(z, z);
+        long xy = FixedBaseMath.fixedMul(x, y);
+        long xz = FixedBaseMath.fixedMul(x, z);
+        long yz = FixedBaseMath.fixedMul(y, z);
+        long wx = FixedBaseMath.fixedMul(w, x);
+        long wy = FixedBaseMath.fixedMul(w, y);
+        long wz = FixedBaseMath.fixedMul(w, z);
+        long two = FixedBaseMath.toFixed(2.0f);
+        long one = FixedBaseMath.toFixed(1.0f);
 
-        int[] m = FixedMatMath.acquireMatrix();
+        long[] m = FixedMatMath.acquireMatrix();
         m[0]  = one - FixedBaseMath.fixedMul(two, FixedBaseMath.fixedAdd(yy, zz));
         m[1]  = FixedBaseMath.fixedMul(two, FixedBaseMath.fixedSub(xy, wz));
         m[2]  = FixedBaseMath.fixedMul(two, FixedBaseMath.fixedAdd(xz, wy));

@@ -1,8 +1,8 @@
 package Renderer;
 
-import FixedMath.*;
-import Models.*;
+import FixedMath.FixedBaseMath;
 import javax.microedition.lcdui.*;
+import Models.*;
 
 public class CanvasScene extends Canvas implements Runnable {
 
@@ -12,29 +12,27 @@ public class CanvasScene extends Canvas implements Runnable {
     private int frame = 0;
     private final int sceneObjectsNum = 1000;
     
-       // Multiplier variables
-    public int moveMultiplier = 1;              // starts at 1
-    private final int MULTIPLIER_STEP = 1;         // how much to increase per key press
-    private final int MULTIPLIER_MAX = 100;         // maximum multiplier value
+    public int moveMultiplier = 1;
+    private final int MULTIPLIER_STEP = 1;
+    private final int MULTIPLIER_MAX = 100;
 
     public CanvasScene() {
         setFullScreenMode(true);
         SharedData.display_width = getWidth();
         SharedData.display_height = getHeight();
-        SharedData.halfW_Q24_8 = FixedMath.FixedBaseMath.toFixed(SharedData.display_width / 2);
-        SharedData.halfH_Q24_8 = FixedMath.FixedBaseMath.toFixed(SharedData.display_height / 2);
+        SharedData.halfW_Q24_8 = FixedBaseMath.toFixed(SharedData.display_width / 2);
+        SharedData.halfH_Q24_8 = FixedBaseMath.toFixed(SharedData.display_height / 2);
 
-        int fovQ = FixedMath.FixedBaseMath.toFixed(60.0f);
-        int aspectQ = FixedMath.FixedBaseMath.toFixed(
-                (float) SharedData.display_width / SharedData.display_height);
-        int nearQ = FixedMath.FixedBaseMath.toFixed(Constants.Common.Z_NEAR);
-        int farQ = FixedMath.FixedBaseMath.toFixed(Constants.Common.Z_FAR);
+        long fovQ = FixedBaseMath.toFixed(60.0f);
+        long aspectQ = FixedBaseMath.toFixed((float) SharedData.display_width / SharedData.display_height);
+        long nearQ = FixedBaseMath.toFixed(Constants.Common.Z_NEAR);
+        long farQ = FixedBaseMath.toFixed(Constants.Common.Z_FAR);
 
         scene = new Scene(sceneObjectsNum, fovQ, aspectQ, nearQ, farQ);
         addObjects();
     }
 
-    // TODO: make sequence loaded from Scenes package on demand.
+
     private void addObjects() {
         // ADD OBJECTS 
         // Example: Planet
@@ -233,24 +231,15 @@ public class CanvasScene extends Canvas implements Runnable {
             gameAction = 0;
         }
         
-        // Increase the multiplier (up to the max)
         moveMultiplier = Math.min(MULTIPLIER_MAX, moveMultiplier + MULTIPLIER_STEP);
-        
-        // Pass the multiplier to your scene logic so that movement/rotation are scaled.
-        // (You may need to update the Scene class to accept the multiplier as a parameter.)
         scene.handleKeyPressed(keyCode, gameAction, moveMultiplier);
     }
 
     protected void keyRepeated(int keyCode) {
-        // For repeated events, we call keyPressed so that the multiplier continues increasing.
         keyPressed(keyCode);
     }
     
     protected void keyReleased(int keyCode) {
-        // Reset the multiplier when the key is released.
         moveMultiplier = 1;
-        
-        // Optionally, if you need to notify the scene that the key was released:
-        //scene.handleKeyReleased(keyCode);
     }
 }

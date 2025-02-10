@@ -1,19 +1,12 @@
 package Renderer;
 
-
-/**
- * A geometry container in Q24.8, e.g. a list of vertices + edges.
- * Similar to your single-cube approach, but can hold any shape.
- */
 public class Model {
 
-    public int[][] vertices; // each is [x,y,z] in Q24.8
-    public int[][] edges;    // pairs of indices
-
+    public long[][] vertices; // each vertex is [x,y,z] in Q
+    public int[][] edges;     // indices into vertices
+    public long boundingSphereRadius;
     
-    public int boundingSphereRadius;
-    
-    public Model(int[][] vertices, int[][] edges, int boundingSphereRadius) {
+    public Model(long[][] vertices, int[][] edges, long boundingSphereRadius) {
         this.vertices = vertices;
         this.edges = edges;
         this.boundingSphereRadius = boundingSphereRadius;

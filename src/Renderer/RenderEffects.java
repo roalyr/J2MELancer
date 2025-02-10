@@ -48,18 +48,18 @@ public class RenderEffects {
         return (sumA << 24) | (sumR << 16) | (sumG << 8) | sumB;
     }
 
-    public static int interpolateColor(int z, int z0, int z1,
+    public static int interpolateColor(long z, long z0, long z1,
             int color0, int color1) {
-        int rangeQ = FixedBaseMath.fixedSub(z1, z0);
+        long rangeQ = FixedBaseMath.fixedSub(z1, z0);
         if (rangeQ <= 0) {
             return color1;
         }
-        int distQ = FixedBaseMath.fixedSub(z, z0);
-        int ratioQ = FixedBaseMath.fixedDiv(distQ, rangeQ);
+        long distQ = FixedBaseMath.fixedSub(z, z0);
+        long ratioQ = FixedBaseMath.fixedDiv(distQ, rangeQ);
         if (ratioQ < 0) {
             ratioQ = 0;
         }
-        int oneQ = FixedBaseMath.toFixed(1.0f);
+        long oneQ = FixedBaseMath.toFixed(1.0f);
         if (ratioQ > oneQ) {
             ratioQ = oneQ;
         }
@@ -103,17 +103,17 @@ public class RenderEffects {
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
-    public static int computeFadeAlpha(int z, int nearQ, int farQ, int fadeNearQ, int fadeFarQ) {
+    public static int computeFadeAlpha(long z, long nearQ, long farQ, long fadeNearQ, long fadeFarQ) {
         if (z < nearQ || z > farQ) {
             return 0;
         }
         if (fadeNearQ <= 0 || fadeFarQ <= 0) {
             return 255;
         }
-        int nearPlusFade = FixedBaseMath.fixedAdd(nearQ, fadeNearQ);
+        long nearPlusFade = FixedBaseMath.fixedAdd(nearQ, fadeNearQ);
         if (z <= nearPlusFade) {
-            int dz = FixedBaseMath.fixedSub(z, nearQ);
-            int ratioQ = FixedBaseMath.fixedDiv(dz, fadeNearQ);
+            long dz = FixedBaseMath.fixedSub(z, nearQ);
+            long ratioQ = FixedBaseMath.fixedDiv(dz, fadeNearQ);
             if (ratioQ < 0) {
                 ratioQ = 0;
             }
@@ -122,10 +122,10 @@ public class RenderEffects {
             }
             return ratioQToAlpha(ratioQ);
         }
-        int farMinusFade = FixedBaseMath.fixedSub(farQ, fadeFarQ);
+        long farMinusFade = FixedBaseMath.fixedSub(farQ, fadeFarQ);
         if (z >= farMinusFade) {
-            int dz = FixedBaseMath.fixedSub(farQ, z);
-            int ratioQ = FixedBaseMath.fixedDiv(dz, fadeFarQ);
+            long dz = FixedBaseMath.fixedSub(farQ, z);
+            long ratioQ = FixedBaseMath.fixedDiv(dz, fadeFarQ);
             if (ratioQ < 0) {
                 ratioQ = 0;
             }
@@ -137,9 +137,6 @@ public class RenderEffects {
         return 255;
     }
 
-    /**
-     * Low-level pixel setter that checks boundaries. 
-     */
     private static void setPixel(int width, int height, int[] frameBuffer,
             int px, int py, int color) {
         if (px < 0 || px >= width || py < 0 || py >= height) {
@@ -148,29 +145,21 @@ public class RenderEffects {
         frameBuffer[py * width + px] = color;
     }
 
-    /**
-     * Unified method to draw a small marker symbol (P, H, or X) at (x,y).
-     * Ensures no out-of-bounds. 
-     * @param shape One of SHAPE_P, SHAPE_H, or SHAPE_X
-     */
     public static void drawMarker(int shape, int width, int height,
             int[] frameBuffer, int x, int y, int color) {
 
         switch (shape) {
             case SHAPE_P:
-                // Single pixel
                 setPixel(width, height, frameBuffer, x, y, color);
                 break;
 
             case SHAPE_H:
-                // Plots (x,y), (x, y+1), (x+1, y)
                 setPixel(width, height, frameBuffer, x, y, color);
                 setPixel(width, height, frameBuffer, x, y + 1, color);
                 setPixel(width, height, frameBuffer, x + 1, y, color);
                 break;
 
             case SHAPE_X:
-                // Center (x,y) + diagonals (y±1,x±1)
                 setPixel(width, height, frameBuffer, x, y, color);
                 setPixel(width, height, frameBuffer, x + 1, y - 1, color);
                 setPixel(width, height, frameBuffer, x + 1, y + 1, color);
@@ -179,60 +168,47 @@ public class RenderEffects {
                 break;
 
             default:
-                // If unknown shape, do nothing or default to P
                 break;
         }
     }
 
-    public static int computeLocalAlpha(int localZ, int localZmin, int localZmax) {
-        // If localZ is at or closer than the model's nearest point, full opacity.
+    public static int computeLocalAlpha(long localZ, long localZmin, long localZmax) {
         if (localZ <= localZmin) {
             return 255;
         }
-        // If at or beyond the model's farthest point, completely transparent.
         if (localZ >= localZmax) {
             return 0;
         }
-        // Compute the fraction along the z-range.
-        int rangeQ = FixedBaseMath.fixedSub(localZmax, localZmin);
-        int diffQ = FixedBaseMath.fixedSub(localZ, localZmin);
-        int ratioQ = FixedBaseMath.fixedDiv(diffQ, rangeQ);
+        long rangeQ = FixedBaseMath.fixedSub(localZmax, localZmin);
+        long diffQ = FixedBaseMath.fixedSub(localZ, localZmin);
+        long ratioQ = FixedBaseMath.fixedDiv(diffQ, rangeQ);
         if (ratioQ < 0) {
             ratioQ = 0;
         } else if (ratioQ > FixedBaseMath.toFixed(1.0f)) {
             ratioQ = FixedBaseMath.toFixed(1.0f);
         }
-        // Invert the ratio: 0 (closest) becomes 1, and 1 (farthest) becomes 0.
-        int invertedRatioQ = FixedBaseMath.fixedSub(FixedBaseMath.toFixed(1.0f), ratioQ);
+        long invertedRatioQ = FixedBaseMath.fixedSub(FixedBaseMath.toFixed(1.0f), ratioQ);
         return ratioQToAlpha(invertedRatioQ);
     }
 
-    public static int computeLocalAlphaFromCameraSpace(int vertexCamZ, int centerCamZ, int boundingRadiusQ) {
-        // Compute the vertex's depth relative to the object center.
-        int localZ = FixedBaseMath.fixedSub(vertexCamZ, centerCamZ);
-        int R = boundingRadiusQ; // expected half depth extent (in Q24.8)
-
-        // Clamp localZ to [-R, R]
+    public static int computeLocalAlphaFromCameraSpace(long vertexCamZ, long centerCamZ, long boundingRadiusQ) {
+        long localZ = FixedBaseMath.fixedSub(vertexCamZ, centerCamZ);
+        long R = boundingRadiusQ;
         if (localZ < -R) {
             localZ = -R;
         } else if (localZ > R) {
             localZ = R;
         }
-        // Normalize localZ from [-R, R] to a ratio in Q24.8: 0 means farthest, 1 means closest.
-        // First, shift so that -R becomes 0 and R becomes 2R:
-        int shifted = FixedBaseMath.fixedAdd(localZ, R);
-        // Divide by 2R:
-        int twoR = FixedBaseMath.fixedMul(FixedBaseMath.toFixed(2.0f), R);
-        int ratioQ = FixedBaseMath.fixedDiv(shifted, twoR);
-        // Invert the ratio so that a vertex with localZ == -R (closest) yields 1.0, and one with localZ == R yields 0.
-        int oneQ = FixedBaseMath.toFixed(1.0f);
-        int invRatioQ = FixedBaseMath.fixedSub(oneQ, ratioQ);
+        long shifted = FixedBaseMath.fixedAdd(localZ, R);
+        long twoR = FixedBaseMath.fixedMul(FixedBaseMath.toFixed(2.0f), R);
+        long ratioQ = FixedBaseMath.fixedDiv(shifted, twoR);
+        long oneQ = FixedBaseMath.toFixed(1.0f);
+        long invRatioQ = FixedBaseMath.fixedSub(oneQ, ratioQ);
         return ratioQToAlpha(invRatioQ);
     }
 
-    // Helper to convert a Q24.8 ratio (0 to 1) into an integer alpha [0,255].
-    public static int ratioQToAlpha(int ratioQ) {
-        int alphaQ = FixedBaseMath.fixedMul(ratioQ, FixedBaseMath.toFixed(255.0f));
+    public static int ratioQToAlpha(long ratioQ) {
+        long alphaQ = FixedBaseMath.fixedMul(ratioQ, FixedBaseMath.toFixed(255.0f));
         int alphaI = FixedBaseMath.toInt(alphaQ);
         if (alphaI < 0) {
             alphaI = 0;

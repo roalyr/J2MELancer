@@ -13,20 +13,20 @@ public class Renderer {
     private final int BACKGROUND_COLOR = 0xFF000000;
     private int width;
     private int height;
-    private int precalc_halfW_Q24_8;
-    private int precalc_halfH_Q24_8;
-    private final int Z_NEAR_Q24_8;
-    private final int Z_FAR_Q24_8;
+    private long precalc_halfW_Q24_8;
+    private long precalc_halfH_Q24_8;
+    private final long Z_NEAR_Q24_8;
+    private final long Z_FAR_Q24_8;
     // Reusable primitives
     private Vector renderables;
     private int[] frameBuffer;
-    private int[] origin;
-    private int[] centerCam;
+    private long[] origin;
+    private long[] centerCam;
     // Scratch buffers (not pooled)
-    private int[] scratch3a = new int[3];
-    private int[] scratch3b = new int[3];
-    private int[] scratch4a = new int[4];
-    private int[] scratch4b = new int[4];
+    private long[] scratch3a = new long[3];
+    private long[] scratch3b = new long[3];
+    private long[] scratch4a = new long[4];
+    private long[] scratch4b = new long[4];
     private int[] screenP0;
     private int[] screenP1;
 
@@ -35,12 +35,12 @@ public class Renderer {
         this.height = SharedData.display_height;
         this.frameBuffer = new int[width * height];
         this.renderables = new Vector();
+        // Z_NEAR and Z_FAR converted to fixed-point long values.
         this.Z_NEAR_Q24_8 = FixedBaseMath.toFixed(Common.Z_NEAR);
         this.Z_FAR_Q24_8 = FixedBaseMath.toFixed(Common.Z_FAR);
-
     }
 
-    public void setRenderables(Vector renderables, int halfWidth, int halfHeight) {
+    public void setRenderables(Vector renderables, long halfWidth, long halfHeight) {
         this.renderables = renderables;
         this.precalc_halfW_Q24_8 = halfWidth;
         this.precalc_halfH_Q24_8 = halfHeight;
@@ -58,18 +58,16 @@ public class Renderer {
         }
     }
 
-    public void renderScene(Graphics g, int[] viewMatrix) {
+    public void renderScene(Graphics g, long[] viewMatrix) {
         // For each renderable, acquire temporary matrices, use them for rendering,
         // then immediately release them.
         for (int i = 0; i < renderables.size(); i++) {
             SceneObject obj = (SceneObject) renderables.elementAt(i);
             // Acquire a temporary local transform matrix from the pool.
-            int[] local = getLocalTransform(obj);  // uses the pool internally
+            long[] local = getLocalTransform(obj);
             // Multiply the view matrix by the local transform.
+            long[] finalMatrix = FixedMatMath.multiply4x4(viewMatrix, local);
 
-            int[] finalMatrix = FixedMatMath.multiply4x4(viewMatrix, local);
-
-            // Render edges or vertices using the computed final matrix.
             if (obj.material == null) {
                 return;
             }
@@ -80,7 +78,6 @@ public class Renderer {
                 drawEdges(finalMatrix, obj);
             }
 
-            // Release the temporary matrices back to the pool.
             FixedMatMath.releaseMatrix(local);
             FixedMatMath.releaseMatrix(finalMatrix);
         }
@@ -88,11 +85,11 @@ public class Renderer {
         SharedData.renderables_num = getRenderables().size();
     }
 
-    private int[] getLocalTransform(SceneObject obj) {
+    private long[] getLocalTransform(SceneObject obj) {
         // Start with an identity matrix.
-        int[] local = FixedMatMath.createIdentity4x4();
-        int[] temp;
-        int[] m;
+        long[] local = FixedMatMath.createIdentity4x4();
+        long[] temp;
+        long[] m;
 
         // Multiply with translation.
         m = FixedMatMath.createTranslation4x4(obj.tx, obj.ty, obj.tz);
@@ -132,71 +129,55 @@ public class Renderer {
         return local;
     }
 
-    private void drawEdges(int[] finalM, SceneObject obj) {
+    private void drawEdges(long[] finalM, SceneObject obj) {
         Material mat = obj.material;
         int[][] edges = obj.model.edges;
-        int[][] verts = obj.model.vertices;
+        long[][] verts = obj.model.vertices;
 
-        int nearQ = mat.nearMarginQ24_8;
-        int farQ = mat.farMarginQ24_8;
-        int fadeNearQ = mat.fadeDistanceNearQ24_8;
-        int fadeFarQ = mat.fadeDistanceFarQ24_8;
+        long nearQ = mat.nearMarginQ24_8;
+        long farQ = mat.farMarginQ24_8;
+        long fadeNearQ = mat.fadeDistanceNearQ24_8;
+        long fadeFarQ = mat.fadeDistanceFarQ24_8;
         int nearColor = mat.colorNear;
         int farColor = mat.colorFar;
         int ditherLevel = mat.ditherLevel;
         int shape = mat.primitiveShape;
 
         // Compute the object's center in camera space.
-        // Create a point for (0,0,0,1) in object space.
-        origin = new int[]{0, 0, 0, FixedBaseMath.toFixed(1.0f)};
-        // We allocate a temporary array for the transformed point.
-        centerCam = new int[4];
+        origin = new long[]{0, 0, 0, FixedBaseMath.toFixed(1.0f)};
+        centerCam = new long[4];
         FixedMatMath.transformPoint(finalM, origin, centerCam);
-        int centerCamZ = centerCam[2];
+        long centerCamZ = centerCam[2];
 
         for (int i = 0; i < edges.length; i++) {
             int i0 = edges[i][0];
             int i1 = edges[i][1];
 
-            // Transform endpoints from object space to camera space.
             FixedMatMath.transformPoint(finalM, verts[i0], scratch4a);
             FixedMatMath.transformPoint(finalM, verts[i1], scratch4b);
 
-            // Project the transformed points to screen.
             screenP0 = projectPointToScreen(scratch3a, scratch4a);
             screenP1 = projectPointToScreen(scratch3b, scratch4b);
             if (screenP0 == null || screenP1 == null) {
                 continue; // clipped
-
             }
 
-            // Compute a fade alpha based on the edge's midpoint distance (world depth)
-            int distA = scratch4a[2];
-            int distB = scratch4b[2];
-            int distMid = FixedBaseMath.fixedDiv(
-                    FixedBaseMath.fixedAdd(distA, distB),
-                    FixedBaseMath.toFixed(2.0f));
+            long distA = scratch4a[2];
+            long distB = scratch4b[2];
+            long distMid = FixedBaseMath.fixedDiv(FixedBaseMath.fixedAdd(distA, distB), FixedBaseMath.toFixed(2.0f));
             int alpha = RenderEffects.computeFadeAlpha(distMid, nearQ, farQ, fadeNearQ, fadeFarQ);
             if (alpha <= 0) {
                 continue;
             }
 
-            // Interpolate color based on depth.
-            int blendedRGB = RenderEffects.interpolateColor(
-                    distMid,
-                    nearQ,
-                    farQ,
-                    nearColor,
-                    farColor);
+            int blendedRGB = RenderEffects.interpolateColor(distMid, nearQ, farQ, nearColor, farColor);
             int alpha_orig = (blendedRGB >> 24) & 0xFF;
             int alpha_combined = (alpha_orig * alpha) / 255;
 
-            // --- Apply local fade based on camera-space depth relative to object center ---
             int localAlpha0 = RenderEffects.computeLocalAlphaFromCameraSpace(scratch4a[2], centerCamZ, obj.model.boundingSphereRadius);
             int localAlpha1 = RenderEffects.computeLocalAlphaFromCameraSpace(scratch4b[2], centerCamZ, obj.model.boundingSphereRadius);
             int localAlpha = (localAlpha0 + localAlpha1) / 2;
             alpha_combined = (alpha_combined * localAlpha) / 255;
-            // --- End local alpha processing ---
 
             int r = (blendedRGB >> 16) & 0xFF;
             int g = (blendedRGB >> 8) & 0xFF;
@@ -210,20 +191,20 @@ public class Renderer {
         }
     }
 
-    private void drawVertices(int[] finalM, SceneObject obj) {
+    private void drawVertices(long[] finalM, SceneObject obj) {
         Material mat = obj.material;
         if (mat == null) {
             return;
         }
-        int nearQ = mat.nearMarginQ24_8;
-        int farQ = mat.farMarginQ24_8;
-        int fadeNearQ = mat.fadeDistanceNearQ24_8;
-        int fadeFarQ = mat.fadeDistanceFarQ24_8;
+        long nearQ = mat.nearMarginQ24_8;
+        long farQ = mat.farMarginQ24_8;
+        long fadeNearQ = mat.fadeDistanceNearQ24_8;
+        long fadeFarQ = mat.fadeDistanceFarQ24_8;
         int nearColor = mat.colorNear;
         int farColor = mat.colorFar;
         int shape = mat.primitiveShape;
 
-        int[][] verts = obj.model.vertices;
+        long[][] verts = obj.model.vertices;
         for (int v = 0; v < verts.length; v++) {
             FixedMatMath.transformPoint(finalM, verts[v], scratch4a);
             int[] screenV = projectPointToScreen(scratch3a, scratch4a);
@@ -232,7 +213,7 @@ public class Renderer {
             }
             int sx = screenV[0];
             int sy = screenV[1];
-            int dist = scratch4a[2];
+            long dist = scratch4a[2];
             int alpha = RenderEffects.computeFadeAlpha(dist, nearQ, farQ, fadeNearQ, fadeFarQ);
             if (alpha <= 0) {
                 continue;
@@ -246,18 +227,18 @@ public class Renderer {
         }
     }
 
-    private int[] projectPointToScreen(int[] r, int[] p) {
+    private int[] projectPointToScreen(long[] r, long[] p) {
         if (p[3] <= 0) {
             return null;
         }
-        int x = FixedBaseMath.fixedDiv(p[0], p[3]);
-        int y = FixedBaseMath.fixedDiv(p[1], p[3]);
-        int z = p[2];
+        long x = FixedBaseMath.fixedDiv(p[0], p[3]);
+        long y = FixedBaseMath.fixedDiv(p[1], p[3]);
+        long z = p[2];
         int sx = FixedBaseMath.toInt(FixedBaseMath.fixedAdd(precalc_halfW_Q24_8,
                 FixedBaseMath.fixedMul(x, precalc_halfW_Q24_8)));
         int sy = FixedBaseMath.toInt(FixedBaseMath.fixedAdd(precalc_halfH_Q24_8,
                 FixedBaseMath.fixedMul(y, precalc_halfH_Q24_8)));
-        int z_mapped = FixedBaseMath.fixedDiv(
+        long z_mapped = FixedBaseMath.fixedDiv(
                 FixedBaseMath.fixedSub(Z_FAR_Q24_8, z),
                 FixedBaseMath.fixedSub(Z_FAR_Q24_8, Z_NEAR_Q24_8));
         if (z_mapped < 0) {
@@ -268,6 +249,12 @@ public class Renderer {
         r[0] = sx;
         r[1] = sy;
         r[2] = z_mapped;
-        return r;
+        // Since screen coordinates are integer, we return the same array r as int[]
+        // by converting its first two entries.
+        int[] screenCoords = new int[3];
+        screenCoords[0] = sx;
+        screenCoords[1] = sy;
+        screenCoords[2] = FixedBaseMath.toInt(z_mapped);
+        return screenCoords;
     }
 }

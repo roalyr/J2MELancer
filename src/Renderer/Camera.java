@@ -6,30 +6,29 @@ import FixedMath.FixedQuatMath;
 
 public class Camera {
 
-    private int[] viewMatrix; // The view matrix (inverse of world transform)
-    private int[] position;   // Position in world space (Q24.8)
+    private long[] viewMatrix; // The view matrix (inverse of world transform)
+    private long[] position;   // Position in world space (Q24.8)
     // Orientation as a quaternion [x, y, z, w] in Q24.8
-    private int[] orientation;
-    private int[] rotMatrix;
-    private int[] rotMatrixT;
-    private int[] trans;
+    private long[] orientation;
+    private long[] rotMatrix;
+    private long[] rotMatrixT;
+    private long[] trans;
 
     public Camera() {
         viewMatrix = FixedMatMath.createIdentity4x4();
-        position = new int[]{0, 0, 0};
+        position = new long[]{0, 0, 0};
         // Persistent orientation starts as identity.
-        orientation = new int[]{0, 0, 0, FixedBaseMath.toFixed(1.0f)};
+        orientation = new long[]{0, 0, 0, FixedBaseMath.toFixed(1.0f)};
     }
 
     // Returns the view matrix used for rendering.
-    public int[] getViewMatrix() {
+    public long[] getViewMatrix() {
         updateViewMatrix();
         return viewMatrix;
     }
 
     // Computes the view matrix as R^T * T(-position), where R is derived from orientation.
     private void updateViewMatrix() {
-        // Release previous viewMatrix if any.
         if (viewMatrix != null) {
             FixedMatMath.releaseMatrix(viewMatrix);
         }
@@ -42,75 +41,71 @@ public class Camera {
         FixedMatMath.releaseMatrix(trans);
     }
 
-    public int[] getPosition() {
+    public long[] getPosition() {
         return position;
     }
 
-    public void setPosition(int x, int y, int z) {
+    public void setPosition(long x, long y, long z) {
         position[0] = x;
         position[1] = y;
         position[2] = z;
     }
 
-    public int[] getOrientation() {
+    public long[] getOrientation() {
         return orientation;
     }
 
-    public void setOrientation(int[] q) {
-        // If the current orientation was acquired from the pool, release it.
+    public void setOrientation(long[] q) {
         if (orientation != null) {
             FixedQuatMath.releaseQuaternion(orientation);
         }
         orientation = q;
     }
 
-    // --- Camera Turning Methods (update persistent orientation in place) ---
-
     // Applies a yaw rotation (about local up: [0,1,0]).
-    public void addYaw(int angleQ) {
-        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{0, FixedBaseMath.toFixed(1.0f), 0}, angleQ);
-        int[] multResult = FixedQuatMath.multiply(orientation, delta);
+    public void addYaw(long angleQ) {
+        long[] delta = FixedQuatMath.fromAxisAngle(new long[]{0, FixedBaseMath.toFixed(1.0f), 0}, angleQ);
+        long[] multResult = FixedQuatMath.multiply(orientation, delta);
         FixedQuatMath.releaseQuaternion(delta);
-        int[] normResult = FixedQuatMath.normalize(multResult);
+        long[] normResult = FixedQuatMath.normalize(multResult);
         FixedQuatMath.releaseQuaternion(multResult);
-        // Release the old persistent orientation.
         FixedQuatMath.releaseQuaternion(orientation);
         orientation = normResult;
     }
 
     // Applies a pitch rotation (about local right: [1,0,0]).
-    public void addPitch(int angleQ) {
-        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{FixedBaseMath.toFixed(1.0f), 0, 0}, angleQ);
-        int[] multResult = FixedQuatMath.multiply(orientation, delta);
+    public void addPitch(long angleQ) {
+        long[] delta = FixedQuatMath.fromAxisAngle(new long[]{FixedBaseMath.toFixed(1.0f), 0, 0}, angleQ);
+        long[] multResult = FixedQuatMath.multiply(orientation, delta);
         FixedQuatMath.releaseQuaternion(delta);
-        int[] normResult = FixedQuatMath.normalize(multResult);
+        long[] normResult = FixedQuatMath.normalize(multResult);
         FixedQuatMath.releaseQuaternion(multResult);
         FixedQuatMath.releaseQuaternion(orientation);
         orientation = normResult;
     }
 
     // Applies a roll rotation (about local forward: [0,0,1]).
-    public void addRoll(int angleQ) {
-        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{0, 0, FixedBaseMath.toFixed(1.0f)}, angleQ);
-        int[] multResult = FixedQuatMath.multiply(orientation, delta);
+    public void addRoll(long angleQ) {
+        long[] delta = FixedQuatMath.fromAxisAngle(new long[]{0, 0, FixedBaseMath.toFixed(1.0f)}, angleQ);
+        long[] multResult = FixedQuatMath.multiply(orientation, delta);
         FixedQuatMath.releaseQuaternion(delta);
-        int[] normResult = FixedQuatMath.normalize(multResult);
+        long[] normResult = FixedQuatMath.normalize(multResult);
         FixedQuatMath.releaseQuaternion(multResult);
         FixedQuatMath.releaseQuaternion(orientation);
         orientation = normResult;
     }
 
     // Returns the current rotation matrix derived from orientation.
-    public int[] getRotationMatrix() {
+    public long[] getRotationMatrix() {
         return FixedQuatMath.toRotationMatrix(orientation);
     }
 
     // --- Translation Methods using current orientation ---
 
-    public void moveForward(int amount) {
-        int[] rot = getRotationMatrix();
-        int[] localForward = new int[]{0, 0, -FixedBaseMath.toFixed(1.0f), 0};
-        int[] worldForward = new int[4]; // Temporary (not pooled)
+    public void moveForward(long amount) {
+        long[] rot = getRotationMatrix();
+        long[] localForward = new long[]{0, 0, -FixedBaseMath.toFixed(1.0f), 0};
+        long[] worldForward = new long[4];
         FixedMatMath.transformPoint(rot, localForward, worldForward);
         position[0] = FixedBaseMath.fixedAdd(position[0], FixedBaseMath.fixedMul(worldForward[0], amount));
         position[1] = FixedBaseMath.fixedAdd(position[1], FixedBaseMath.fixedMul(worldForward[1], amount));
@@ -118,10 +113,10 @@ public class Camera {
         FixedMatMath.releaseMatrix(rot);
     }
 
-    public void moveRight(int amount) {
-        int[] rot = getRotationMatrix();
-        int[] localRight = new int[]{FixedBaseMath.toFixed(1.0f), 0, 0, 0};
-        int[] worldRight = new int[4];
+    public void moveRight(long amount) {
+        long[] rot = getRotationMatrix();
+        long[] localRight = new long[]{FixedBaseMath.toFixed(1.0f), 0, 0, 0};
+        long[] worldRight = new long[4];
         FixedMatMath.transformPoint(rot, localRight, worldRight);
         position[0] = FixedBaseMath.fixedAdd(position[0], FixedBaseMath.fixedMul(worldRight[0], amount));
         position[1] = FixedBaseMath.fixedAdd(position[1], FixedBaseMath.fixedMul(worldRight[1], amount));
@@ -129,10 +124,10 @@ public class Camera {
         FixedMatMath.releaseMatrix(rot);
     }
 
-    public void moveUp(int amount) {
-        int[] rot = getRotationMatrix();
-        int[] localUp = new int[]{0, FixedBaseMath.toFixed(1.0f), 0, 0};
-        int[] worldUp = new int[4];
+    public void moveUp(long amount) {
+        long[] rot = getRotationMatrix();
+        long[] localUp = new long[]{0, FixedBaseMath.toFixed(1.0f), 0, 0};
+        long[] worldUp = new long[4];
         FixedMatMath.transformPoint(rot, localUp, worldUp);
         position[0] = FixedBaseMath.fixedAdd(position[0], FixedBaseMath.fixedMul(worldUp[0], amount));
         position[1] = FixedBaseMath.fixedAdd(position[1], FixedBaseMath.fixedMul(worldUp[1], amount));
