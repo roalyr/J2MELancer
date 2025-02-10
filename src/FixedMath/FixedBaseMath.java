@@ -49,7 +49,7 @@ package FixedMath;
 
 public final class FixedBaseMath {
 
-    public static final int FIXED_SHIFT = 10;
+    public static final int FIXED_SHIFT = 12;
     public static final long FIXED_SCALE = 1L << FIXED_SHIFT;
 
     public static final long MAX_FIXED = Long.MAX_VALUE;

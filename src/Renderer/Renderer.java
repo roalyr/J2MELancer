@@ -18,6 +18,8 @@ public class Renderer {
     private final long Z_NEAR_Q24_8;
     private final long Z_FAR_Q24_8;
     // Reusable primitives
+	private final int[] reusableScreenCoords0 = new int[3];
+	private final int[] reusableScreenCoords1 = new int[3];
     private Vector renderables;
     private int[] frameBuffer;
     private long[] origin;
@@ -156,8 +158,8 @@ public class Renderer {
             FixedMatMath.transformPoint(finalM, verts[i0], scratch4a);
             FixedMatMath.transformPoint(finalM, verts[i1], scratch4b);
 
-            screenP0 = projectPointToScreen(scratch3a, scratch4a);
-            screenP1 = projectPointToScreen(scratch3b, scratch4b);
+			int[] screenP0 = projectPointToScreen(scratch3a, scratch4a, reusableScreenCoords0);
+			int[] screenP1 = projectPointToScreen(scratch3b, scratch4b, reusableScreenCoords1);
             if (screenP0 == null || screenP1 == null) {
                 continue; // clipped
             }
@@ -207,7 +209,7 @@ public class Renderer {
         long[][] verts = obj.model.vertices;
         for (int v = 0; v < verts.length; v++) {
             FixedMatMath.transformPoint(finalM, verts[v], scratch4a);
-            int[] screenV = projectPointToScreen(scratch3a, scratch4a);
+            int[] screenV = projectPointToScreen(scratch3a, scratch4a, reusableScreenCoords0);
             if (screenV == null) {
                 continue;
             }
@@ -227,34 +229,30 @@ public class Renderer {
         }
     }
 
-    private int[] projectPointToScreen(long[] r, long[] p) {
-        if (p[3] <= 0) {
-            return null;
-        }
-        long x = FixedBaseMath.fixedDiv(p[0], p[3]);
-        long y = FixedBaseMath.fixedDiv(p[1], p[3]);
-        long z = p[2];
-        int sx = FixedBaseMath.toInt(FixedBaseMath.fixedAdd(precalc_halfW_Q24_8,
-                FixedBaseMath.fixedMul(x, precalc_halfW_Q24_8)));
-        int sy = FixedBaseMath.toInt(FixedBaseMath.fixedAdd(precalc_halfH_Q24_8,
-                FixedBaseMath.fixedMul(y, precalc_halfH_Q24_8)));
-        long z_mapped = FixedBaseMath.fixedDiv(
-                FixedBaseMath.fixedSub(Z_FAR_Q24_8, z),
-                FixedBaseMath.fixedSub(Z_FAR_Q24_8, Z_NEAR_Q24_8));
-        if (z_mapped < 0) {
-            z_mapped = 0;
-        } else if (z_mapped > FixedBaseMath.toFixed(1f)) {
-            z_mapped = FixedBaseMath.toFixed(1f);
-        }
-        r[0] = sx;
-        r[1] = sy;
-        r[2] = z_mapped;
-        // Since screen coordinates are integer, we return the same array r as int[]
-        // by converting its first two entries.
-        int[] screenCoords = new int[3];
-        screenCoords[0] = sx;
-        screenCoords[1] = sy;
-        screenCoords[2] = FixedBaseMath.toInt(z_mapped);
-        return screenCoords;
-    }
+	private int[] projectPointToScreen(long[] scratch, long[] p, int[] reusableBuffer) {
+		if (p[3] <= 0) {
+			return null;
+		}
+		long x = FixedBaseMath.fixedDiv(p[0], p[3]);
+		long y = FixedBaseMath.fixedDiv(p[1], p[3]);
+		long z = p[2];
+		int sx = FixedBaseMath.toInt(FixedBaseMath.fixedAdd(precalc_halfW_Q24_8,
+						  FixedBaseMath.fixedMul(x, precalc_halfW_Q24_8)));
+		int sy = FixedBaseMath.toInt(FixedBaseMath.fixedAdd(precalc_halfH_Q24_8,
+						  FixedBaseMath.fixedMul(y, precalc_halfH_Q24_8)));
+		long z_mapped = FixedBaseMath.fixedDiv(
+				FixedBaseMath.fixedSub(Z_FAR_Q24_8, z),
+				FixedBaseMath.fixedSub(Z_FAR_Q24_8, Z_NEAR_Q24_8));
+		if (z_mapped < 0) {
+			z_mapped = 0;
+		} else if (z_mapped > FixedBaseMath.toFixed(1f)) {
+			z_mapped = FixedBaseMath.toFixed(1f);
+		}
+		reusableBuffer[0] = sx;
+		reusableBuffer[1] = sy;
+		reusableBuffer[2] = FixedBaseMath.toInt(z_mapped);
+		return reusableBuffer;
+	}
+
+
 }

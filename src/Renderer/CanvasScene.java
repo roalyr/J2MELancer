@@ -35,7 +35,7 @@ public class CanvasScene extends Canvas implements Runnable {
 
     private void addObjects() {
         // ADD OBJECTS 
-        // Example: Planet
+        // Example: Planet small
         model = Sphere.create(12, 12);
 
         sceneObject = new SceneObject(model);
@@ -61,18 +61,47 @@ public class CanvasScene extends Canvas implements Runnable {
         
         
          // ADD OBJECTS 
-        // Example: Planet
-        model = Sphere.create(12, 12);
+        // Example: Planet big
+        model = Sphere.create(24, 12);
 
         sceneObject = new SceneObject(model);
         sceneObject.tx = FixedBaseMath.toFixed(15000.0f);
         sceneObject.ty = FixedBaseMath.toFixed(-30000.0f);
         sceneObject.tz = FixedBaseMath.toFixed(-50000.0f);
+        sceneObject.rotX = FixedBaseMath.toFixed(0.2f);
+        sceneObject.rotY = FixedBaseMath.toFixed(1.0f);
         sceneObject.scale = FixedBaseMath.toFixed(10000.0f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         sceneObject.material = new Material(
-                0xFFAABB33, // Color near
+                0xFFAA5522, // Color near
+                0xFF334411, // Color far
+                FixedBaseMath.toFixed(1f), // Material z-near
+                FixedBaseMath.toFixed(500000f), // Material z-far
+                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(100000f), // Alpha ramp distance far
+                RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
+                1, // Primitive width (TODO)
+                RenderEffects.SHAPE_P, // Primitive shape
+                8);  // Dither level
+
+        scene.addObject(sceneObject);
+        
+        // Ring
+         model = Ring.create(36);
+
+        sceneObject = new SceneObject(model);
+        sceneObject.tx = FixedBaseMath.toFixed(15000.0f);
+        sceneObject.ty = FixedBaseMath.toFixed(-30000.0f);
+        sceneObject.tz = FixedBaseMath.toFixed(-50000.0f);
+        sceneObject.scale = FixedBaseMath.toFixed(15000.0f);
+        sceneObject.rotX = FixedBaseMath.toFixed(0.8f);
+        sceneObject.rotY = FixedBaseMath.toFixed(0.2f);
+        sceneObject.rotZ = FixedBaseMath.toFixed(0f);
+        sceneObject.updateBoundingSphereRadiusScaled();
+
+        sceneObject.material = new Material(
+                0xFFAA5522, // Color near
                 0xFF334411, // Color far
                 FixedBaseMath.toFixed(1f), // Material z-near
                 FixedBaseMath.toFixed(500000f), // Material z-far
@@ -213,13 +242,13 @@ public class CanvasScene extends Canvas implements Runnable {
     }
 
     public void run() {
-        while (true) {
-            frame++;
-            try {
-                Thread.sleep(Constants.Common.DELTA_RENDER);
-            } catch (InterruptedException e) {
-            }
-        }
+        //while (true) {
+        //    frame++;
+        //    try {
+        //        Thread.sleep(Constants.Common.DELTA_RENDER);
+        //    } catch (InterruptedException e) {
+        //    }
+        //}
     }
 
     protected void keyPressed(int keyCode) {
