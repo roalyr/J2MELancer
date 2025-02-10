@@ -35,8 +35,8 @@ public class Renderer {
         this.height = SharedData.display_height;
         this.frameBuffer = new int[width * height];
         this.renderables = new Vector();
-        this.Z_NEAR_Q24_8 = FixedBaseMath.toQ24_8(Common.Z_NEAR);
-        this.Z_FAR_Q24_8 = FixedBaseMath.toQ24_8(Common.Z_FAR);
+        this.Z_NEAR_Q24_8 = FixedBaseMath.toFixed(Common.Z_NEAR);
+        this.Z_FAR_Q24_8 = FixedBaseMath.toFixed(Common.Z_FAR);
 
     }
 
@@ -148,7 +148,7 @@ public class Renderer {
 
         // Compute the object's center in camera space.
         // Create a point for (0,0,0,1) in object space.
-        origin = new int[]{0, 0, 0, FixedBaseMath.toQ24_8(1.0f)};
+        origin = new int[]{0, 0, 0, FixedBaseMath.toFixed(1.0f)};
         // We allocate a temporary array for the transformed point.
         centerCam = new int[4];
         FixedMatMath.transformPoint(finalM, origin, centerCam);
@@ -173,9 +173,9 @@ public class Renderer {
             // Compute a fade alpha based on the edge's midpoint distance (world depth)
             int distA = scratch4a[2];
             int distB = scratch4b[2];
-            int distMid = FixedBaseMath.q24_8_div(
-                    FixedBaseMath.q24_8_add(distA, distB),
-                    FixedBaseMath.toQ24_8(2.0f));
+            int distMid = FixedBaseMath.fixedDiv(
+                    FixedBaseMath.fixedAdd(distA, distB),
+                    FixedBaseMath.toFixed(2.0f));
             int alpha = RenderEffects.computeFadeAlpha(distMid, nearQ, farQ, fadeNearQ, fadeFarQ);
             if (alpha <= 0) {
                 continue;
@@ -250,20 +250,20 @@ public class Renderer {
         if (p[3] <= 0) {
             return null;
         }
-        int x = FixedBaseMath.q24_8_div(p[0], p[3]);
-        int y = FixedBaseMath.q24_8_div(p[1], p[3]);
+        int x = FixedBaseMath.fixedDiv(p[0], p[3]);
+        int y = FixedBaseMath.fixedDiv(p[1], p[3]);
         int z = p[2];
-        int sx = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(precalc_halfW_Q24_8,
-                FixedBaseMath.q24_8_mul(x, precalc_halfW_Q24_8)));
-        int sy = FixedBaseMath.toInt(FixedBaseMath.q24_8_add(precalc_halfH_Q24_8,
-                FixedBaseMath.q24_8_mul(y, precalc_halfH_Q24_8)));
-        int z_mapped = FixedBaseMath.q24_8_div(
-                FixedBaseMath.q24_8_sub(Z_FAR_Q24_8, z),
-                FixedBaseMath.q24_8_sub(Z_FAR_Q24_8, Z_NEAR_Q24_8));
+        int sx = FixedBaseMath.toInt(FixedBaseMath.fixedAdd(precalc_halfW_Q24_8,
+                FixedBaseMath.fixedMul(x, precalc_halfW_Q24_8)));
+        int sy = FixedBaseMath.toInt(FixedBaseMath.fixedAdd(precalc_halfH_Q24_8,
+                FixedBaseMath.fixedMul(y, precalc_halfH_Q24_8)));
+        int z_mapped = FixedBaseMath.fixedDiv(
+                FixedBaseMath.fixedSub(Z_FAR_Q24_8, z),
+                FixedBaseMath.fixedSub(Z_FAR_Q24_8, Z_NEAR_Q24_8));
         if (z_mapped < 0) {
             z_mapped = 0;
-        } else if (z_mapped > FixedBaseMath.toQ24_8(1f)) {
-            z_mapped = FixedBaseMath.toQ24_8(1f);
+        } else if (z_mapped > FixedBaseMath.toFixed(1f)) {
+            z_mapped = FixedBaseMath.toFixed(1f);
         }
         r[0] = sx;
         r[1] = sy;

@@ -18,7 +18,7 @@ public class Camera {
         viewMatrix = FixedMatMath.createIdentity4x4();
         position = new int[]{0, 0, 0};
         // Persistent orientation starts as identity.
-        orientation = new int[]{0, 0, 0, FixedBaseMath.toQ24_8(1.0f)};
+        orientation = new int[]{0, 0, 0, FixedBaseMath.toFixed(1.0f)};
     }
 
     // Returns the view matrix used for rendering.
@@ -68,7 +68,7 @@ public class Camera {
 
     // Applies a yaw rotation (about local up: [0,1,0]).
     public void addYaw(int angleQ) {
-        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{0, FixedBaseMath.toQ24_8(1.0f), 0}, angleQ);
+        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{0, FixedBaseMath.toFixed(1.0f), 0}, angleQ);
         int[] multResult = FixedQuatMath.multiply(orientation, delta);
         FixedQuatMath.releaseQuaternion(delta);
         int[] normResult = FixedQuatMath.normalize(multResult);
@@ -80,7 +80,7 @@ public class Camera {
 
     // Applies a pitch rotation (about local right: [1,0,0]).
     public void addPitch(int angleQ) {
-        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{FixedBaseMath.toQ24_8(1.0f), 0, 0}, angleQ);
+        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{FixedBaseMath.toFixed(1.0f), 0, 0}, angleQ);
         int[] multResult = FixedQuatMath.multiply(orientation, delta);
         FixedQuatMath.releaseQuaternion(delta);
         int[] normResult = FixedQuatMath.normalize(multResult);
@@ -91,7 +91,7 @@ public class Camera {
 
     // Applies a roll rotation (about local forward: [0,0,1]).
     public void addRoll(int angleQ) {
-        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{0, 0, FixedBaseMath.toQ24_8(1.0f)}, angleQ);
+        int[] delta = FixedQuatMath.fromAxisAngle(new int[]{0, 0, FixedBaseMath.toFixed(1.0f)}, angleQ);
         int[] multResult = FixedQuatMath.multiply(orientation, delta);
         FixedQuatMath.releaseQuaternion(delta);
         int[] normResult = FixedQuatMath.normalize(multResult);
@@ -109,34 +109,34 @@ public class Camera {
 
     public void moveForward(int amount) {
         int[] rot = getRotationMatrix();
-        int[] localForward = new int[]{0, 0, -FixedBaseMath.toQ24_8(1.0f), 0};
+        int[] localForward = new int[]{0, 0, -FixedBaseMath.toFixed(1.0f), 0};
         int[] worldForward = new int[4]; // Temporary (not pooled)
         FixedMatMath.transformPoint(rot, localForward, worldForward);
-        position[0] = FixedBaseMath.q24_8_add(position[0], FixedBaseMath.q24_8_mul(worldForward[0], amount));
-        position[1] = FixedBaseMath.q24_8_add(position[1], FixedBaseMath.q24_8_mul(worldForward[1], amount));
-        position[2] = FixedBaseMath.q24_8_add(position[2], FixedBaseMath.q24_8_mul(worldForward[2], amount));
+        position[0] = FixedBaseMath.fixedAdd(position[0], FixedBaseMath.fixedMul(worldForward[0], amount));
+        position[1] = FixedBaseMath.fixedAdd(position[1], FixedBaseMath.fixedMul(worldForward[1], amount));
+        position[2] = FixedBaseMath.fixedAdd(position[2], FixedBaseMath.fixedMul(worldForward[2], amount));
         FixedMatMath.releaseMatrix(rot);
     }
 
     public void moveRight(int amount) {
         int[] rot = getRotationMatrix();
-        int[] localRight = new int[]{FixedBaseMath.toQ24_8(1.0f), 0, 0, 0};
+        int[] localRight = new int[]{FixedBaseMath.toFixed(1.0f), 0, 0, 0};
         int[] worldRight = new int[4];
         FixedMatMath.transformPoint(rot, localRight, worldRight);
-        position[0] = FixedBaseMath.q24_8_add(position[0], FixedBaseMath.q24_8_mul(worldRight[0], amount));
-        position[1] = FixedBaseMath.q24_8_add(position[1], FixedBaseMath.q24_8_mul(worldRight[1], amount));
-        position[2] = FixedBaseMath.q24_8_add(position[2], FixedBaseMath.q24_8_mul(worldRight[2], amount));
+        position[0] = FixedBaseMath.fixedAdd(position[0], FixedBaseMath.fixedMul(worldRight[0], amount));
+        position[1] = FixedBaseMath.fixedAdd(position[1], FixedBaseMath.fixedMul(worldRight[1], amount));
+        position[2] = FixedBaseMath.fixedAdd(position[2], FixedBaseMath.fixedMul(worldRight[2], amount));
         FixedMatMath.releaseMatrix(rot);
     }
 
     public void moveUp(int amount) {
         int[] rot = getRotationMatrix();
-        int[] localUp = new int[]{0, FixedBaseMath.toQ24_8(1.0f), 0, 0};
+        int[] localUp = new int[]{0, FixedBaseMath.toFixed(1.0f), 0, 0};
         int[] worldUp = new int[4];
         FixedMatMath.transformPoint(rot, localUp, worldUp);
-        position[0] = FixedBaseMath.q24_8_add(position[0], FixedBaseMath.q24_8_mul(worldUp[0], amount));
-        position[1] = FixedBaseMath.q24_8_add(position[1], FixedBaseMath.q24_8_mul(worldUp[1], amount));
-        position[2] = FixedBaseMath.q24_8_add(position[2], FixedBaseMath.q24_8_mul(worldUp[2], amount));
+        position[0] = FixedBaseMath.fixedAdd(position[0], FixedBaseMath.fixedMul(worldUp[0], amount));
+        position[1] = FixedBaseMath.fixedAdd(position[1], FixedBaseMath.fixedMul(worldUp[1], amount));
+        position[2] = FixedBaseMath.fixedAdd(position[2], FixedBaseMath.fixedMul(worldUp[2], amount));
         FixedMatMath.releaseMatrix(rot);
     }
 }

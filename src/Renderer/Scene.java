@@ -18,8 +18,8 @@ public class Scene {
     private Perspective perspective;
 
     // Movement & rotation increments in Q24.8
-    private static final int MOVE_STEP = FixedBaseMath.toQ24_8(0.1f);
-    private static final int ROT_STEP = FixedBaseMath.toQ24_8(0.01f);
+    private static final int MOVE_STEP = FixedBaseMath.toFixed(0.1f);
+    private static final int ROT_STEP = FixedBaseMath.toFixed(0.01f);
 
     public Scene(int capacity, int fovQ, int aspectQ, int nearQ, int farQ) {
         objects = new Vector(capacity);
@@ -48,7 +48,7 @@ public class Scene {
     public void resetCamera() {
         camera.setPosition(0, 0, 0);
         // Reset orientation to identity quaternion: [0, 0, 0, 1.0] in Q24.8
-        camera.setOrientation(new int[]{0, 0, 0, FixedBaseMath.toQ24_8(1.0f)});
+        camera.setOrientation(new int[]{0, 0, 0, FixedBaseMath.toFixed(1.0f)});
     }
 
     public void increaseFov() {
@@ -67,7 +67,7 @@ public class Scene {
             deg = FOV_MAX;
         }
         fovDegrees = deg;
-        int fq = FixedBaseMath.toQ24_8((float) deg);
+        int fq = FixedBaseMath.toFixed((float) deg);
         perspective.setFov(fq);
         this.fovQ = fq;
     //System.out.print(this.fovQ+"\n");
@@ -148,7 +148,7 @@ public class Scene {
         center[0] = obj.tx;
         center[1] = obj.ty;
         center[2] = obj.tz;
-        center[3] = FixedBaseMath.toQ24_8(1.0f);
+        center[3] = FixedBaseMath.toFixed(1.0f);
         
         int cull_far = obj.material.farMarginQ24_8;
         int cull_near = obj.material.nearMarginQ24_8;
@@ -164,10 +164,10 @@ public class Scene {
             FixedMatMath.releaseMatrix(centerCam);
             return false;
         }
-        int invW = FixedBaseMath.q24_8_div(FixedBaseMath.toQ24_8(1.0f), cw);
-        cx = FixedBaseMath.q24_8_mul(cx, invW);
-        cy = FixedBaseMath.q24_8_mul(cy, invW);
-        cz = FixedBaseMath.q24_8_mul(cz, invW);
+        int invW = FixedBaseMath.fixedDiv(FixedBaseMath.toFixed(1.0f), cw);
+        cx = FixedBaseMath.fixedMul(cx, invW);
+        cy = FixedBaseMath.fixedMul(cy, invW);
+        cz = FixedBaseMath.fixedMul(cz, invW);
         int distQ = -cz;
         int radius = -obj.boundingSphereRadiusScaled;
 
@@ -177,30 +177,30 @@ public class Scene {
             //FixedMatMath.releaseMatrix(centerCam);
             //return true;
         //}
-        //if (FixedBaseMath.q24_8_add(distQ, radius) < cull_near) {
+        //if (FixedBaseMath.fixedAdd(distQ, radius) < cull_near) {
         //    FixedMatMath.releaseMatrix(center);
         //    FixedMatMath.releaseMatrix(centerCam);
         //    return false;
         //}
-        if (FixedBaseMath.q24_8_add(distQ, radius) > cull_far) {
+        if (FixedBaseMath.fixedAdd(distQ, radius) > cull_far) {
             FixedMatMath.releaseMatrix(center);
             FixedMatMath.releaseMatrix(centerCam);
             return false;
         }
-        int halfFovDegQ = FixedBaseMath.q24_8_div(fovQ, FixedBaseMath.toQ24_8(2.0f));
-        int halfFovRadQ = FixedTrigMath.degreesToRadiansQ24_8(FixedBaseMath.toInt(halfFovDegQ));
+        int halfFovDegQ = FixedBaseMath.fixedDiv(fovQ, FixedBaseMath.toFixed(2.0f));
+        int halfFovRadQ = FixedTrigMath.degreesToRadians(FixedBaseMath.toInt(halfFovDegQ));
         int tanHalfVertFovQ = FixedTrigMath.tan(halfFovRadQ);
-        int tanHalfHorizFovQ = FixedBaseMath.q24_8_mul(tanHalfVertFovQ, aspectQ);
+        int tanHalfHorizFovQ = FixedBaseMath.fixedMul(tanHalfVertFovQ, aspectQ);
         int absCX = (cx < 0) ? -cx : cx;
-        int lrLimit = FixedBaseMath.q24_8_mul(distQ, tanHalfHorizFovQ);
-        if (FixedBaseMath.q24_8_add(absCX, radius) > lrLimit) {
+        int lrLimit = FixedBaseMath.fixedMul(distQ, tanHalfHorizFovQ);
+        if (FixedBaseMath.fixedAdd(absCX, radius) > lrLimit) {
             FixedMatMath.releaseMatrix(center);
             FixedMatMath.releaseMatrix(centerCam);
             return false;
         }
         int absCY = (cy < 0) ? -cy : cy;
-        int tbLimit = FixedBaseMath.q24_8_mul(distQ, tanHalfVertFovQ);
-        if (FixedBaseMath.q24_8_add(absCY, radius) > tbLimit) {
+        int tbLimit = FixedBaseMath.fixedMul(distQ, tanHalfVertFovQ);
+        if (FixedBaseMath.fixedAdd(absCY, radius) > tbLimit) {
             FixedMatMath.releaseMatrix(center);
             FixedMatMath.releaseMatrix(centerCam);
             return false;

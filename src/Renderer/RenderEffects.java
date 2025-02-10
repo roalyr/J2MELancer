@@ -50,16 +50,16 @@ public class RenderEffects {
 
     public static int interpolateColor(int z, int z0, int z1,
             int color0, int color1) {
-        int rangeQ = FixedBaseMath.q24_8_sub(z1, z0);
+        int rangeQ = FixedBaseMath.fixedSub(z1, z0);
         if (rangeQ <= 0) {
             return color1;
         }
-        int distQ = FixedBaseMath.q24_8_sub(z, z0);
-        int ratioQ = FixedBaseMath.q24_8_div(distQ, rangeQ);
+        int distQ = FixedBaseMath.fixedSub(z, z0);
+        int ratioQ = FixedBaseMath.fixedDiv(distQ, rangeQ);
         if (ratioQ < 0) {
             ratioQ = 0;
         }
-        int oneQ = FixedBaseMath.toQ24_8(1.0f);
+        int oneQ = FixedBaseMath.toFixed(1.0f);
         if (ratioQ > oneQ) {
             ratioQ = oneQ;
         }
@@ -76,10 +76,10 @@ public class RenderEffects {
         int deltaR = r1 - r0;
         int deltaG = g1 - g0;
         int deltaB = b1 - b0;
-        int a = a0 + FixedBaseMath.toInt(FixedBaseMath.q24_8_mul(FixedBaseMath.toQ24_8(deltaA), ratioQ));
-        int r = r0 + FixedBaseMath.toInt(FixedBaseMath.q24_8_mul(FixedBaseMath.toQ24_8(deltaR), ratioQ));
-        int g = g0 + FixedBaseMath.toInt(FixedBaseMath.q24_8_mul(FixedBaseMath.toQ24_8(deltaG), ratioQ));
-        int b = b0 + FixedBaseMath.toInt(FixedBaseMath.q24_8_mul(FixedBaseMath.toQ24_8(deltaB), ratioQ));
+        int a = a0 + FixedBaseMath.toInt(FixedBaseMath.fixedMul(FixedBaseMath.toFixed(deltaA), ratioQ));
+        int r = r0 + FixedBaseMath.toInt(FixedBaseMath.fixedMul(FixedBaseMath.toFixed(deltaR), ratioQ));
+        int g = g0 + FixedBaseMath.toInt(FixedBaseMath.fixedMul(FixedBaseMath.toFixed(deltaG), ratioQ));
+        int b = b0 + FixedBaseMath.toInt(FixedBaseMath.fixedMul(FixedBaseMath.toFixed(deltaB), ratioQ));
         if (a < 0) {
             a = 0;
         } else if (a > 255) {
@@ -110,27 +110,27 @@ public class RenderEffects {
         if (fadeNearQ <= 0 || fadeFarQ <= 0) {
             return 255;
         }
-        int nearPlusFade = FixedBaseMath.q24_8_add(nearQ, fadeNearQ);
+        int nearPlusFade = FixedBaseMath.fixedAdd(nearQ, fadeNearQ);
         if (z <= nearPlusFade) {
-            int dz = FixedBaseMath.q24_8_sub(z, nearQ);
-            int ratioQ = FixedBaseMath.q24_8_div(dz, fadeNearQ);
+            int dz = FixedBaseMath.fixedSub(z, nearQ);
+            int ratioQ = FixedBaseMath.fixedDiv(dz, fadeNearQ);
             if (ratioQ < 0) {
                 ratioQ = 0;
             }
-            if (ratioQ > FixedBaseMath.toQ24_8(1.0f)) {
-                ratioQ = FixedBaseMath.toQ24_8(1.0f);
+            if (ratioQ > FixedBaseMath.toFixed(1.0f)) {
+                ratioQ = FixedBaseMath.toFixed(1.0f);
             }
             return ratioQToAlpha(ratioQ);
         }
-        int farMinusFade = FixedBaseMath.q24_8_sub(farQ, fadeFarQ);
+        int farMinusFade = FixedBaseMath.fixedSub(farQ, fadeFarQ);
         if (z >= farMinusFade) {
-            int dz = FixedBaseMath.q24_8_sub(farQ, z);
-            int ratioQ = FixedBaseMath.q24_8_div(dz, fadeFarQ);
+            int dz = FixedBaseMath.fixedSub(farQ, z);
+            int ratioQ = FixedBaseMath.fixedDiv(dz, fadeFarQ);
             if (ratioQ < 0) {
                 ratioQ = 0;
             }
-            if (ratioQ > FixedBaseMath.toQ24_8(1.0f)) {
-                ratioQ = FixedBaseMath.toQ24_8(1.0f);
+            if (ratioQ > FixedBaseMath.toFixed(1.0f)) {
+                ratioQ = FixedBaseMath.toFixed(1.0f);
             }
             return ratioQToAlpha(ratioQ);
         }
@@ -194,22 +194,22 @@ public class RenderEffects {
             return 0;
         }
         // Compute the fraction along the z-range.
-        int rangeQ = FixedBaseMath.q24_8_sub(localZmax, localZmin);
-        int diffQ = FixedBaseMath.q24_8_sub(localZ, localZmin);
-        int ratioQ = FixedBaseMath.q24_8_div(diffQ, rangeQ);
+        int rangeQ = FixedBaseMath.fixedSub(localZmax, localZmin);
+        int diffQ = FixedBaseMath.fixedSub(localZ, localZmin);
+        int ratioQ = FixedBaseMath.fixedDiv(diffQ, rangeQ);
         if (ratioQ < 0) {
             ratioQ = 0;
-        } else if (ratioQ > FixedBaseMath.toQ24_8(1.0f)) {
-            ratioQ = FixedBaseMath.toQ24_8(1.0f);
+        } else if (ratioQ > FixedBaseMath.toFixed(1.0f)) {
+            ratioQ = FixedBaseMath.toFixed(1.0f);
         }
         // Invert the ratio: 0 (closest) becomes 1, and 1 (farthest) becomes 0.
-        int invertedRatioQ = FixedBaseMath.q24_8_sub(FixedBaseMath.toQ24_8(1.0f), ratioQ);
+        int invertedRatioQ = FixedBaseMath.fixedSub(FixedBaseMath.toFixed(1.0f), ratioQ);
         return ratioQToAlpha(invertedRatioQ);
     }
 
     public static int computeLocalAlphaFromCameraSpace(int vertexCamZ, int centerCamZ, int boundingRadiusQ) {
         // Compute the vertex's depth relative to the object center.
-        int localZ = FixedBaseMath.q24_8_sub(vertexCamZ, centerCamZ);
+        int localZ = FixedBaseMath.fixedSub(vertexCamZ, centerCamZ);
         int R = boundingRadiusQ; // expected half depth extent (in Q24.8)
 
         // Clamp localZ to [-R, R]
@@ -220,19 +220,19 @@ public class RenderEffects {
         }
         // Normalize localZ from [-R, R] to a ratio in Q24.8: 0 means farthest, 1 means closest.
         // First, shift so that -R becomes 0 and R becomes 2R:
-        int shifted = FixedBaseMath.q24_8_add(localZ, R);
+        int shifted = FixedBaseMath.fixedAdd(localZ, R);
         // Divide by 2R:
-        int twoR = FixedBaseMath.q24_8_mul(FixedBaseMath.toQ24_8(2.0f), R);
-        int ratioQ = FixedBaseMath.q24_8_div(shifted, twoR);
+        int twoR = FixedBaseMath.fixedMul(FixedBaseMath.toFixed(2.0f), R);
+        int ratioQ = FixedBaseMath.fixedDiv(shifted, twoR);
         // Invert the ratio so that a vertex with localZ == -R (closest) yields 1.0, and one with localZ == R yields 0.
-        int oneQ = FixedBaseMath.toQ24_8(1.0f);
-        int invRatioQ = FixedBaseMath.q24_8_sub(oneQ, ratioQ);
+        int oneQ = FixedBaseMath.toFixed(1.0f);
+        int invRatioQ = FixedBaseMath.fixedSub(oneQ, ratioQ);
         return ratioQToAlpha(invRatioQ);
     }
 
     // Helper to convert a Q24.8 ratio (0 to 1) into an integer alpha [0,255].
     public static int ratioQToAlpha(int ratioQ) {
-        int alphaQ = FixedBaseMath.q24_8_mul(ratioQ, FixedBaseMath.toQ24_8(255.0f));
+        int alphaQ = FixedBaseMath.fixedMul(ratioQ, FixedBaseMath.toFixed(255.0f));
         int alphaI = FixedBaseMath.toInt(alphaQ);
         if (alphaI < 0) {
             alphaI = 0;

@@ -5,19 +5,13 @@ import java.util.Vector;
 
 public final class FixedVecMath {
 
-    public static final int Q24_8_SHIFT = 8;
-    public static final int Q24_8_SCALE = (1 << Q24_8_SHIFT);
+    public static final int FIXED_SHIFT = FixedBaseMath.FIXED_SHIFT;
+    public static final int FIXED_SCALE = FixedBaseMath.FIXED_SCALE;
 
-    // ---------------------------
     // Pool for int[] arrays by length.
-    // ---------------------------
     private static final Hashtable pool = new Hashtable();
     private static final int MAX_IDLE_POOL_SIZE = 16;
 
-    /**
-     * Acquires an int[] array of the specified length from the pool.
-     * If none is available, a new one is created.
-     */
     public static synchronized int[] acquireVector(int length) {
         Integer key = new Integer(length);
         Vector vecPool = (Vector) pool.get(key);
@@ -34,9 +28,6 @@ public final class FixedVecMath {
         return new int[length];
     }
 
-    /**
-     * Releases an int[] array back to the pool.
-     */
     public static synchronized void releaseVector(int[] v) {
         if (v == null) {
             return;
@@ -48,16 +39,15 @@ public final class FixedVecMath {
             pool.put(key, vecPool);
         }
         vecPool.addElement(v);
-        // Trim if too many idle arrays.
         while (vecPool.size() > MAX_IDLE_POOL_SIZE) {
             vecPool.removeElementAt(vecPool.size() - 1);
         }
     }
 
     // -------------------------------------
-    // Vector Add/Sub (Assumes same length)
+    // Vector Addition
     // -------------------------------------
-    public static int[] q24_8_add(int[] v1, int[] v2) {
+    public static int[] fixedAdd(int[] v1, int[] v2) {
         int len = v1.length;
         int[] result = acquireVector(len);
         for (int i = 0; i < len; i++) {
@@ -66,7 +56,10 @@ public final class FixedVecMath {
         return result;
     }
 
-    public static int[] q24_8_sub(int[] v1, int[] v2) {
+    // -------------------------------------
+    // Vector Subtraction
+    // -------------------------------------
+    public static int[] fixedSub(int[] v1, int[] v2) {
         int len = v1.length;
         int[] result = acquireVector(len);
         for (int i = 0; i < len; i++) {
@@ -76,20 +69,21 @@ public final class FixedVecMath {
     }
 
     // -------------------------------------
-    // Scalar Multiply/Divide
+    // Scalar Multiplication
     // -------------------------------------
-    public static int[] q24_8_mul(int[] v, int scalar) {
+    public static int[] fixedMul(int[] v, int scalar) {
         int len = v.length;
         int[] result = acquireVector(len);
         for (int i = 0; i < len; i++) {
-            // (v[i] * scalar) >> Q24_8_SHIFT
-            long tmp = ((long) v[i] * (long) scalar) >> Q24_8_SHIFT;
-            result[i] = (int) tmp;
+            result[i] = FixedBaseMath.fixedMul(v[i], scalar);
         }
         return result;
     }
 
-    public static int[] q24_8_div(int[] v, int scalar) {
+    // -------------------------------------
+    // Scalar Division
+    // -------------------------------------
+    public static int[] fixedDiv(int[] v, int scalar) {
         int len = v.length;
         int[] result = acquireVector(len);
         if (scalar == 0) {
@@ -99,7 +93,7 @@ public final class FixedVecMath {
             return result;
         }
         for (int i = 0; i < len; i++) {
-            result[i] = (int) (((long) v[i] << Q24_8_SHIFT) / scalar);
+            result[i] = FixedBaseMath.fixedDiv(v[i], scalar);
         }
         return result;
     }
@@ -107,71 +101,67 @@ public final class FixedVecMath {
     // -------------------------------------
     // Dot Product
     // -------------------------------------
-    public static int q24_8_dotProduct(int[] v1, int[] v2) {
+    public static int fixedDotProduct(int[] v1, int[] v2) {
         int len = v1.length;
         long sum = 0;
         for (int i = 0; i < len; i++) {
-            sum += (long) v1[i] * (long) v2[i];
+            sum += (long) v1[i] * v2[i];
         }
-        return (int) (sum >> Q24_8_SHIFT);
+        return (int) (sum >> FixedBaseMath.FIXED_SHIFT);
     }
 
     // -------------------------------------
     // Cross Product (3D only)
     // -------------------------------------
-    public static int[] q24_8_crossProduct(int[] v1, int[] v2) {
+    public static int[] fixedCrossProduct(int[] v1, int[] v2) {
         int[] result = acquireVector(3);
-        result[0] = (int) ((((long) v1[1] * v2[2]) - ((long) v1[2] * v2[1])) >> Q24_8_SHIFT);
-        result[1] = (int) ((((long) v1[2] * v2[0]) - ((long) v1[0] * v2[2])) >> Q24_8_SHIFT);
-        result[2] = (int) ((((long) v1[0] * v2[1]) - ((long) v1[1] * v2[0])) >> Q24_8_SHIFT);
+        result[0] = (int) (((long) v1[1] * v2[2] - (long) v1[2] * v2[1]) >> FixedBaseMath.FIXED_SHIFT);
+        result[1] = (int) (((long) v1[2] * v2[0] - (long) v1[0] * v2[2]) >> FixedBaseMath.FIXED_SHIFT);
+        result[2] = (int) (((long) v1[0] * v2[1] - (long) v1[1] * v2[0]) >> FixedBaseMath.FIXED_SHIFT);
         return result;
     }
 
     // -------------------------------------
     // Magnitude (Length)
     // -------------------------------------
-    public static int q24_8_magnitude(int[] v) {
+    public static int fixedMagnitude(int[] v) {
         int len = v.length;
         long sqrSum = 0;
         for (int i = 0; i < len; i++) {
             long val = v[i];
             sqrSum += val * val;
         }
-        long q24_8_val = sqrSum >> Q24_8_SHIFT;
-        if (q24_8_val > 0x7FFFFFFF) {
-            q24_8_val = 0x7FFFFFFF;
-        }
-        return FixedBaseMath.sqrt((int) q24_8_val);
+        return FixedBaseMath.sqrt((int) (sqrSum >> FixedBaseMath.FIXED_SHIFT));
     }
 
     // -------------------------------------
     // Normalize
     // -------------------------------------
-    public static int[] q24_8_normalize(int[] v) {
-        int mag = q24_8_magnitude(v);
+    public static int[] normalize(int[] v) {
+        int mag = fixedMagnitude(v);
         if (mag == 0) {
-            return acquireVector(v.length);  // Return a zero vector from the pool.
+            return acquireVector(v.length);
         }
-        return q24_8_div(v, mag);
+        return fixedDiv(v, mag);
     }
 
     // -------------------------------------
-    // Angle Between Two Vectors
+    // Angle Between Two Vectors (in radians, fixed-point)
     // -------------------------------------
     public static int angleBetweenVectors(int[] v1, int[] v2) {
-        int dot = q24_8_dotProduct(v1, v2);
-        int mag1 = q24_8_magnitude(v1);
-        int mag2 = q24_8_magnitude(v2);
+        int dot = fixedDotProduct(v1, v2);
+        int mag1 = fixedMagnitude(v1);
+        int mag2 = fixedMagnitude(v2);
         if (mag1 == 0 || mag2 == 0) {
             return 0;
         }
-        long numerator = ((long) dot) << Q24_8_SHIFT;
+        long numerator = ((long) dot) << FixedBaseMath.FIXED_SHIFT;
         long denom = (long) mag1 * mag2;
         if (denom == 0) {
             return 0;
         }
         long cosVal = numerator / denom;
-        long limit = (1 << Q24_8_SHIFT);
+        long limit = (1 << FixedBaseMath.FIXED_SHIFT);
         if (cosVal > limit) {
             cosVal = limit;
         }
@@ -182,23 +172,21 @@ public final class FixedVecMath {
     }
 
     // -------------------------------------
-    // Angle Between Normalized Vectors (Optional)
+    // Angle Between Normalized Vectors
     // -------------------------------------
     public static int angleBetweenNormalized(int[] v1, int[] v2) {
-        int[] vn1 = q24_8_normalize(v1);
-        int[] vn2 = q24_8_normalize(v2);
-        int dot = q24_8_dotProduct(vn1, vn2);
-        if (dot > Q24_8_SCALE) {
-            dot = Q24_8_SCALE;
+        int[] vn1 = normalize(v1);
+        int[] vn2 = normalize(v2);
+        int dot = fixedDotProduct(vn1, vn2);
+        if (dot > FIXED_SCALE) {
+            dot = FIXED_SCALE;
         }
-        if (dot < -Q24_8_SCALE) {
-            dot = -Q24_8_SCALE;
+        if (dot < -FIXED_SCALE) {
+            dot = -FIXED_SCALE;
         }
-        // Optionally, you might want to release vn1 and vn2 if they were acquired from the pool.
         return FixedTrigMath.acos(dot);
     }
 
-    // Prevent instantiation.
     private FixedVecMath() {
     }
 }

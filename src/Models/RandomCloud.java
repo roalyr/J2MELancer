@@ -26,16 +26,16 @@ public class RandomCloud {
             float z = (float) (rnd.nextFloat() * 2 - 1);
             // Accept only if inside the unit sphere (x^2 + y^2 + z^2 <= 1.0)
             if ((x * x + y * y + z * z) <= 1.0f) {
-                vertices[count][0] = FixedBaseMath.toQ24_8(x);
-                vertices[count][1] = FixedBaseMath.toQ24_8(y);
-                vertices[count][2] = FixedBaseMath.toQ24_8(z);
+                vertices[count][0] = FixedBaseMath.toFixed(x);
+                vertices[count][1] = FixedBaseMath.toFixed(y);
+                vertices[count][2] = FixedBaseMath.toFixed(z);
                 count++;
             }
         }
         // No edges for a random cloud
         int[][] edges = new int[0][0];
         // The bounding sphere for points in a unit sphere is 1.0 (in Q24.8)
-        int boundingSphere = FixedBaseMath.toQ24_8(1.0f);
+        int boundingSphere = FixedBaseMath.toFixed(1.0f);
 
         return new Model(vertices, edges, boundingSphere);
     }

@@ -3,11 +3,11 @@ import FixedMath.*;
 
 
 public class Common {
-    public static final int ZERO = FixedBaseMath.toQ24_8(0.0f);
-    public static final int ONE_NEG = FixedBaseMath.toQ24_8(-1.0f);
-    public static final int ONE_POS = FixedBaseMath.toQ24_8(1.0f);
+    public static final int ZERO = FixedBaseMath.toFixed(0.0f);
+    public static final int ONE_NEG = FixedBaseMath.toFixed(-1.0f);
+    public static final int ONE_POS = FixedBaseMath.toFixed(1.0f);
     
-    public static final int ONE_DEGREE_IN_RADIANS = FixedBaseMath.toQ24_8(0.0174533f);
+    public static final int ONE_DEGREE_IN_RADIANS = FixedBaseMath.toFixed(0.0174533f);
     
     public static final int FPS_RENDER_MAX = 60;
     public static final int DELTA_RENDER = 1000/FPS_RENDER_MAX; // ms between frames in Renderer 

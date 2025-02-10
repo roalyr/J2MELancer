@@ -25,7 +25,7 @@ public class Sphere {
 
         // For a normalized sphere in [-1..+1], radius = 1.0
         // (If you consider the sphere in [-0.5..+0.5], adjust as needed.)
-        int boundingSphere = FixedBaseMath.toQ24_8(1.0f);
+        int boundingSphere = FixedBaseMath.toFixed(1.0f);
 
         return new Model(vertices, edges, boundingSphere);
     }
@@ -42,21 +42,21 @@ public class Sphere {
         for (int i = 0; i <= numRings; i++) {
             float phi = (float) Math.PI * i / numRings;  // 0..PI
 
-            int sinPhi = FixedBaseMath.toQ24_8((float) Math.sin(phi));
-            int cosPhi = FixedBaseMath.toQ24_8((float) Math.cos(phi));
+            int sinPhi = FixedBaseMath.toFixed((float) Math.sin(phi));
+            int cosPhi = FixedBaseMath.toFixed((float) Math.cos(phi));
 
             for (int j = 0; j <= numSegments; j++) {
                 float theta = 2.0f * (float) Math.PI * j / numSegments; // 0..2PI
 
-                int sinTheta = FixedBaseMath.toQ24_8((float) Math.sin(theta));
-                int cosTheta = FixedBaseMath.toQ24_8((float) Math.cos(theta));
+                int sinTheta = FixedBaseMath.toFixed((float) Math.sin(theta));
+                int cosTheta = FixedBaseMath.toFixed((float) Math.cos(theta));
 
                 // x = sinPhi * cosTheta
                 // y = cosPhi
                 // z = sinPhi * sinTheta
-                int x = FixedBaseMath.q24_8_mul(cosTheta, sinPhi);
+                int x = FixedBaseMath.fixedMul(cosTheta, sinPhi);
                 int y = cosPhi;
-                int z = FixedBaseMath.q24_8_mul(sinTheta, sinPhi);
+                int z = FixedBaseMath.fixedMul(sinTheta, sinPhi);
 
                 verts[vertexIndex++] = new int[]{x, y, z};
             }

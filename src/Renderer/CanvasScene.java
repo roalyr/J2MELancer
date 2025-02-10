@@ -21,14 +21,14 @@ public class CanvasScene extends Canvas implements Runnable {
         setFullScreenMode(true);
         SharedData.display_width = getWidth();
         SharedData.display_height = getHeight();
-        SharedData.halfW_Q24_8 = FixedMath.FixedBaseMath.toQ24_8(SharedData.display_width / 2);
-        SharedData.halfH_Q24_8 = FixedMath.FixedBaseMath.toQ24_8(SharedData.display_height / 2);
+        SharedData.halfW_Q24_8 = FixedMath.FixedBaseMath.toFixed(SharedData.display_width / 2);
+        SharedData.halfH_Q24_8 = FixedMath.FixedBaseMath.toFixed(SharedData.display_height / 2);
 
-        int fovQ = FixedMath.FixedBaseMath.toQ24_8(60.0f);
-        int aspectQ = FixedMath.FixedBaseMath.toQ24_8(
+        int fovQ = FixedMath.FixedBaseMath.toFixed(60.0f);
+        int aspectQ = FixedMath.FixedBaseMath.toFixed(
                 (float) SharedData.display_width / SharedData.display_height);
-        int nearQ = FixedMath.FixedBaseMath.toQ24_8(Constants.Common.Z_NEAR);
-        int farQ = FixedMath.FixedBaseMath.toQ24_8(Constants.Common.Z_FAR);
+        int nearQ = FixedMath.FixedBaseMath.toFixed(Constants.Common.Z_NEAR);
+        int farQ = FixedMath.FixedBaseMath.toFixed(Constants.Common.Z_FAR);
 
         scene = new Scene(sceneObjectsNum, fovQ, aspectQ, nearQ, farQ);
         addObjects();
@@ -38,52 +38,52 @@ public class CanvasScene extends Canvas implements Runnable {
     private void addObjects() {
         // ADD OBJECTS 
         // Example: Planet
-        model = Sphere.create(24, 12);
+        model = Sphere.create(12, 12);
 
         sceneObject = new SceneObject(model);
-        sceneObject.tx = FixedBaseMath.toQ24_8(20.0f);
-        sceneObject.ty = FixedBaseMath.toQ24_8(10.0f);
-        sceneObject.tz = FixedBaseMath.toQ24_8(-500.0f);
-        sceneObject.scale = FixedBaseMath.toQ24_8(200.0f);
+        sceneObject.tx = FixedBaseMath.toFixed(20.0f);
+        sceneObject.ty = FixedBaseMath.toFixed(10.0f);
+        sceneObject.tz = FixedBaseMath.toFixed(-500.0f);
+        sceneObject.scale = FixedBaseMath.toFixed(200.0f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         sceneObject.material = new Material(
                 0xFF1D635B, // Color near
                 0xFF093612, // Color far
-                FixedBaseMath.toQ24_8(1f), // Material z-near
-                FixedBaseMath.toQ24_8(50000f), // Material z-far
-                FixedBaseMath.toQ24_8(100f), // Alpha ramp distance near
-                FixedBaseMath.toQ24_8(5000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1f), // Material z-near
+                FixedBaseMath.toFixed(50000f), // Material z-far
+                FixedBaseMath.toFixed(100f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(5000f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                2);  // Dither level
+                8);  // Dither level
 
         scene.addObject(sceneObject);
         
         
          // ADD OBJECTS 
         // Example: Planet
-        model = Sphere.create(24, 12);
+        model = Sphere.create(12, 12);
 
         sceneObject = new SceneObject(model);
-        sceneObject.tx = FixedBaseMath.toQ24_8(5000.0f);
-        sceneObject.ty = FixedBaseMath.toQ24_8(1000.0f);
-        sceneObject.tz = FixedBaseMath.toQ24_8(-5000.0f);
-        sceneObject.scale = FixedBaseMath.toQ24_8(1000.0f);
+        sceneObject.tx = FixedBaseMath.toFixed(15000.0f);
+        sceneObject.ty = FixedBaseMath.toFixed(-30000.0f);
+        sceneObject.tz = FixedBaseMath.toFixed(-50000.0f);
+        sceneObject.scale = FixedBaseMath.toFixed(10000.0f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         sceneObject.material = new Material(
                 0xFFAABB33, // Color near
                 0xFF334411, // Color far
-                FixedBaseMath.toQ24_8(1f), // Material z-near
-                FixedBaseMath.toQ24_8(50000f), // Material z-far
-                FixedBaseMath.toQ24_8(100f), // Alpha ramp distance near
-                FixedBaseMath.toQ24_8(5000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1f), // Material z-near
+                FixedBaseMath.toFixed(500000f), // Material z-far
+                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(100000f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                2);  // Dither level
+                8);  // Dither level
 
         scene.addObject(sceneObject);
 
@@ -93,19 +93,19 @@ public class CanvasScene extends Canvas implements Runnable {
         model = Cube.create(2);
 
         sceneObject = new SceneObject(model);
-        sceneObject.tx = FixedBaseMath.toQ24_8(-20.0f);
-        sceneObject.ty = FixedBaseMath.toQ24_8(5.0f);
-        sceneObject.tz = FixedBaseMath.toQ24_8(-50.0f);
-        sceneObject.scale = FixedBaseMath.toQ24_8(5.0f);
+        sceneObject.tx = FixedBaseMath.toFixed(-20.0f);
+        sceneObject.ty = FixedBaseMath.toFixed(5.0f);
+        sceneObject.tz = FixedBaseMath.toFixed(-50.0f);
+        sceneObject.scale = FixedBaseMath.toFixed(5.0f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         sceneObject.material = new Material(
                 0xFFAAAAFF, // Color near
                 0xFFFF2222, // Color far
-                FixedBaseMath.toQ24_8(1f), // Material z-near
-                FixedBaseMath.toQ24_8(5000f), // Material z-far
-                FixedBaseMath.toQ24_8(5f), // Alpha ramp distance near
-                FixedBaseMath.toQ24_8(500f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1f), // Material z-near
+                FixedBaseMath.toFixed(5000f), // Material z-far
+                FixedBaseMath.toFixed(5f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(500f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
@@ -119,19 +119,19 @@ public class CanvasScene extends Canvas implements Runnable {
         model = Cube.create(5);
 
         sceneObject = new SceneObject(model);
-        sceneObject.tx = FixedBaseMath.toQ24_8(-200.0f);
-        sceneObject.ty = FixedBaseMath.toQ24_8(500.0f);
-        sceneObject.tz = FixedBaseMath.toQ24_8(-5000.0f);
-        sceneObject.scale = FixedBaseMath.toQ24_8(50.0f);
+        sceneObject.tx = FixedBaseMath.toFixed(-200.0f);
+        sceneObject.ty = FixedBaseMath.toFixed(500.0f);
+        sceneObject.tz = FixedBaseMath.toFixed(-5000.0f);
+        sceneObject.scale = FixedBaseMath.toFixed(50.0f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         sceneObject.material = new Material(
                 0xFFAAAAFF, // Color near
                 0xFFFF2222, // Color far
-                FixedBaseMath.toQ24_8(1f), // Material z-near
-                FixedBaseMath.toQ24_8(10000f), // Material z-far
-                FixedBaseMath.toQ24_8(10f), // Alpha ramp distance near
-                FixedBaseMath.toQ24_8(1000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1f), // Material z-near
+                FixedBaseMath.toFixed(10000f), // Material z-far
+                FixedBaseMath.toFixed(10f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1000f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
@@ -141,20 +141,20 @@ public class CanvasScene extends Canvas implements Runnable {
 
         // Make another model.
         // Example: Starsphere blue
-        model = RandomCloud.create(32, Constants.Common.SEED + 1);
+        model = RandomCloud.create(16, Constants.Common.SEED + 1);
 
         sceneObject = new SceneObject(model);
-        sceneObject.scale = FixedBaseMath.toQ24_8(1e6f);
+        sceneObject.scale = FixedBaseMath.toFixed(1e6f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         // Example: set a material on this sphere (covered below)
         sceneObject.material = new Material(
                 0xFF1155FF, // Color near
                 0xFF1155FF, // Color far
-                FixedBaseMath.toQ24_8(0f), // Material z-near
-                FixedBaseMath.toQ24_8(1e6f), // Material z-far
-                FixedBaseMath.toQ24_8(1f), // Alpha ramp distance near
-                FixedBaseMath.toQ24_8(1f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(0f), // Material z-near
+                FixedBaseMath.toFixed(1e6f), // Material z-far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance far
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_X, // Primitive shape
@@ -165,20 +165,20 @@ public class CanvasScene extends Canvas implements Runnable {
         
         // Make another model.
         // Example: Starsphere yellow
-        model = RandomCloud.create(64, Constants.Common.SEED + 10);
+        model = RandomCloud.create(32, Constants.Common.SEED + 10);
 
         sceneObject = new SceneObject(model);
-        sceneObject.scale = FixedBaseMath.toQ24_8(1e6f);
+        sceneObject.scale = FixedBaseMath.toFixed(1e6f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         // Example: set a material on this sphere (covered below)
         sceneObject.material = new Material(
                 0xFFAAAA00, // Color near
                 0xFFAAAA00, // Color far
-                FixedBaseMath.toQ24_8(0f), // Material z-near
-                FixedBaseMath.toQ24_8(1e6f), // Material z-far
-                FixedBaseMath.toQ24_8(1f), // Alpha ramp distance near
-                FixedBaseMath.toQ24_8(1f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(0f), // Material z-near
+                FixedBaseMath.toFixed(1e6f), // Material z-far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance far
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
@@ -188,20 +188,20 @@ public class CanvasScene extends Canvas implements Runnable {
         
         // Make another model.
         // Example: Starsphere red
-        model = RandomCloud.create(128, Constants.Common.SEED + 100);
+        model = RandomCloud.create(64, Constants.Common.SEED + 100);
 
         sceneObject = new SceneObject(model);
-        sceneObject.scale = FixedBaseMath.toQ24_8(1e6f);
+        sceneObject.scale = FixedBaseMath.toFixed(1e6f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         // Example: set a material on this sphere (covered below)
         sceneObject.material = new Material(
                 0xFFAA0000, // Color near
                 0xFFAA0000, // Color far
-                FixedBaseMath.toQ24_8(0f), // Material z-near
-                FixedBaseMath.toQ24_8(1e6f), // Material z-far
-                FixedBaseMath.toQ24_8(1f), // Alpha ramp distance near
-                FixedBaseMath.toQ24_8(1f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(0f), // Material z-near
+                FixedBaseMath.toFixed(1e6f), // Material z-far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance far
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
@@ -216,7 +216,6 @@ public class CanvasScene extends Canvas implements Runnable {
 
     public void run() {
         while (true) {
-            repaint();
             frame++;
             try {
                 Thread.sleep(Constants.Common.DELTA_RENDER);
@@ -226,6 +225,7 @@ public class CanvasScene extends Canvas implements Runnable {
     }
 
     protected void keyPressed(int keyCode) {
+        repaint();
         int gameAction;
         try {
             gameAction = getGameAction(keyCode);

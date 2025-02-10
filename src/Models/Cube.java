@@ -56,9 +56,9 @@ public class Cube {
                         float fy = ((float) y / (n - 1)) - 0.5f;
                         float fz = ((float) z / (n - 1)) - 0.5f;
 
-                        int xQ = FixedBaseMath.toQ24_8(fx);
-                        int yQ = FixedBaseMath.toQ24_8(fy);
-                        int zQ = FixedBaseMath.toQ24_8(fz);
+                        int xQ = FixedBaseMath.toFixed(fx);
+                        int yQ = FixedBaseMath.toFixed(fy);
+                        int zQ = FixedBaseMath.toFixed(fz);
 
                         // Store into vertex list
                         vertexList.addElement(new int[]{xQ, yQ, zQ});
@@ -110,7 +110,7 @@ public class Cube {
 
         // Step 3: bounding sphere radius for a [-0.5..+0.5] cube is ~0.866 * scale
         // but let's keep it as 1.0 in Q24.8 for simpler usage:
-        int boundingSphere = FixedBaseMath.toQ24_8(1.0f);
+        int boundingSphere = FixedBaseMath.toFixed(1.0f);
 
         return new Model(vertices, edges, boundingSphere);
     }

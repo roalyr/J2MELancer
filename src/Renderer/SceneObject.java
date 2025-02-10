@@ -33,7 +33,7 @@ public class SceneObject {
     public void updateBoundingSphereRadiusScaled() {
         // boundingSphereRadiusScaled = model.boundingSphereRadius * scale
         boundingSphereRadiusScaled = 
-            FixedBaseMath.q24_8_mul(model.boundingSphereRadius, scale);
+            FixedBaseMath.fixedMul(model.boundingSphereRadius, scale);
     }
    
 }
