@@ -12,6 +12,7 @@ import Renderer.Model;
  */
 public class Cube {
 
+
     /**
      * Creates a ModelQ24_8 representing a subdivided cube. All coordinates
      * are in Q24.8 fixed-point format, covering the region [-0.5,+0.5]^3.
@@ -46,11 +47,12 @@ public class Cube {
                 for (int z = 0; z < n; z++) {
                     // Check if it's on the "surface" of the cube
                     if (x == 0 || x == n - 1 ||
-                        y == 0 || y == n - 1 ||
-                        z == 0 || z == n - 1) {
+                            y == 0 || y == n - 1 ||
+                            z == 0 || z == n - 1) {
 
                         // Map x,y,z in [0..n-1] to [-0.5..+0.5]
                         float fx = ((float) x / (n - 1)) - 0.5f; // [0..1] -> [-0.5..0.5]
+
                         float fy = ((float) y / (n - 1)) - 0.5f;
                         float fz = ((float) z / (n - 1)) - 0.5f;
 
@@ -82,6 +84,7 @@ public class Cube {
                     int idx = indexMap[x][y][z];
                     if (idx < 0) {
                         continue; // not a surface point
+
                     }
                     // neighbor in +X direction
                     if (x + 1 < n && indexMap[x + 1][y][z] >= 0) {
@@ -107,10 +110,9 @@ public class Cube {
 
         // Step 3: bounding sphere radius for a [-0.5..+0.5] cube is ~0.866 * scale
         // but let's keep it as 1.0 in Q24.8 for simpler usage:
-        int boundingSphereQ = FixedBaseMath.toQ24_8(1.0f);
+        int boundingSphere = FixedBaseMath.toQ24_8(1.0f);
 
-        // Step 4: Construct and return the final Model
-        return new Model(vertices, edges, boundingSphereQ);
+        return new Model(vertices, edges, boundingSphere);
     }
 
     // Example usage:

@@ -16,4 +16,6 @@ public class Common {
     public static final float Z_NEAR = 1.0f;
     public static final float Z_FAR = 1e4f;  // ~8.3e6 is near the upper limit. 
     
+    public static final long SEED = 1234;
+    
 }

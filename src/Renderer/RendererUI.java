@@ -6,10 +6,6 @@ package Renderer;
 
 import javax.microedition.lcdui.Graphics;
 
-/**
- *
- * @author ROAL
- */
 public class RendererUI {
 
     private String stringA;

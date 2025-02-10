@@ -20,6 +20,8 @@ public class Renderer {
     // Reusable primitives
     private Vector renderables;
     private int[] frameBuffer;
+    private int[] origin;
+    private int[] centerCam;
     // Scratch buffers (not pooled)
     private int[] scratch3a = new int[3];
     private int[] scratch3b = new int[3];
@@ -68,7 +70,11 @@ public class Renderer {
             int[] finalMatrix = FixedMatMath.multiply4x4(viewMatrix, local);
 
             // Render edges or vertices using the computed final matrix.
-            if (obj.material != null && obj.material.renderType == 0) {
+            if (obj.material == null) {
+                return;
+            }
+
+            if (obj.material.renderType == RenderEffects.TYPE_VERTICES) {
                 drawVertices(finalMatrix, obj);
             } else {
                 drawEdges(finalMatrix, obj);
@@ -128,92 +134,79 @@ public class Renderer {
 
     private void drawEdges(int[] finalM, SceneObject obj) {
         Material mat = obj.material;
-
         int[][] edges = obj.model.edges;
         int[][] verts = obj.model.vertices;
 
         int nearQ = mat.nearMarginQ24_8;
         int farQ = mat.farMarginQ24_8;
-        int fadeQ = mat.fadeDistanceQ24_8;
+        int fadeNearQ = mat.fadeDistanceNearQ24_8;
+        int fadeFarQ = mat.fadeDistanceFarQ24_8;
         int nearColor = mat.colorNear;
         int farColor = mat.colorFar;
-        float exponent = mat.colorExponent;
+        int ditherLevel = mat.ditherLevel;
+        int shape = mat.primitiveShape;
+
+        // Compute the object's center in camera space.
+        // Create a point for (0,0,0,1) in object space.
+        origin = new int[]{0, 0, 0, FixedBaseMath.toQ24_8(1.0f)};
+        // We allocate a temporary array for the transformed point.
+        centerCam = new int[4];
+        FixedMatMath.transformPoint(finalM, origin, centerCam);
+        int centerCamZ = centerCam[2];
 
         for (int i = 0; i < edges.length; i++) {
             int i0 = edges[i][0];
             int i1 = edges[i][1];
 
+            // Transform endpoints from object space to camera space.
             FixedMatMath.transformPoint(finalM, verts[i0], scratch4a);
             FixedMatMath.transformPoint(finalM, verts[i1], scratch4b);
 
+            // Project the transformed points to screen.
             screenP0 = projectPointToScreen(scratch3a, scratch4a);
             screenP1 = projectPointToScreen(scratch3b, scratch4b);
-
             if (screenP0 == null || screenP1 == null) {
                 continue; // clipped
 
             }
 
+            // Compute a fade alpha based on the edge's midpoint distance (world depth)
             int distA = scratch4a[2];
             int distB = scratch4b[2];
             int distMid = FixedBaseMath.q24_8_div(
                     FixedBaseMath.q24_8_add(distA, distB),
                     FixedBaseMath.toQ24_8(2.0f));
-            int alpha = RendererEffects.computeFadeAlpha(distMid, nearQ, farQ, fadeQ);
+            int alpha = RenderEffects.computeFadeAlpha(distMid, nearQ, farQ, fadeNearQ, fadeFarQ);
             if (alpha <= 0) {
                 continue;
             }
 
-            int blendedRGB = RendererEffects.interpolateColor(
+            // Interpolate color based on depth.
+            int blendedRGB = RenderEffects.interpolateColor(
                     distMid,
                     nearQ,
                     farQ,
                     nearColor,
-                    farColor,
-                    exponent);
+                    farColor);
+            int alpha_orig = (blendedRGB >> 24) & 0xFF;
+            int alpha_combined = (alpha_orig * alpha) / 255;
+
+            // --- Apply local fade based on camera-space depth relative to object center ---
+            int localAlpha0 = RenderEffects.computeLocalAlphaFromCameraSpace(scratch4a[2], centerCamZ, obj.model.boundingSphereRadius);
+            int localAlpha1 = RenderEffects.computeLocalAlphaFromCameraSpace(scratch4b[2], centerCamZ, obj.model.boundingSphereRadius);
+            int localAlpha = (localAlpha0 + localAlpha1) / 2;
+            alpha_combined = (alpha_combined * localAlpha) / 255;
+            // --- End local alpha processing ---
+
             int r = (blendedRGB >> 16) & 0xFF;
             int g = (blendedRGB >> 8) & 0xFF;
-            int b = (blendedRGB) & 0xFF;
-            int finalColor = (alpha << 24) | (r << 16) | (g << 8) | b;
+            int b = blendedRGB & 0xFF;
+            int finalColor = (alpha_combined << 24) | (r << 16) | (g << 8) | b;
 
-            drawLine(screenP0[0], screenP0[1], screenP1[0], screenP1[1], finalColor);
-        }
-    }
-
-    private void drawLine(int x0, int y0, int x1, int y1, int color) {
-        int alpha = (color >> 24) & 0xFF;
- 
-        if ((x0 < 0 && x1 < 0) || (x0 >= width && x1 >= width) ||
-                (y0 < 0 && y1 < 0) || (y0 >= height && y1 >= height)) {
-            return;
-        }
-        int dx = Math.abs(x1 - x0);
-        int dy = Math.abs(y1 - y0);
-        int sx = (x0 < x1) ? 1 : -1;
-        int sy = (y0 < y1) ? 1 : -1;
-        int err = dx - dy;
-        while (true) {
-            if (x0 == x1 && y0 == y1) {
-                break;
-            }
-
-            if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height) {
-                drawP(x0, y0, color, alpha);
-            }
-
-            //if (x0 > 0 && x0 < width-1 && y0 > 0 && y0 < height-1) {
-            //    drawX(x0, y0, color, alpha);
-            //}
-
-            int e2 = err << 1;
-            if (e2 > -dy) {
-                err -= dy;
-                x0 += sx;
-            }
-            if (e2 < dx) {
-                err += dx;
-                y0 += sy;
-            }
+            RenderLine.drawLineDither(shape, width, height, frameBuffer,
+                    screenP0[0], screenP0[1],
+                    screenP1[0], screenP1[1],
+                    finalColor, ditherLevel);
         }
     }
 
@@ -224,10 +217,12 @@ public class Renderer {
         }
         int nearQ = mat.nearMarginQ24_8;
         int farQ = mat.farMarginQ24_8;
-        int fadeQ = mat.fadeDistanceQ24_8;
+        int fadeNearQ = mat.fadeDistanceNearQ24_8;
+        int fadeFarQ = mat.fadeDistanceFarQ24_8;
         int nearColor = mat.colorNear;
         int farColor = mat.colorFar;
-        float exponent = mat.colorExponent;
+        int shape = mat.primitiveShape;
+
         int[][] verts = obj.model.vertices;
         for (int v = 0; v < verts.length; v++) {
             FixedMatMath.transformPoint(finalM, verts[v], scratch4a);
@@ -238,54 +233,17 @@ public class Renderer {
             int sx = screenV[0];
             int sy = screenV[1];
             int dist = scratch4a[2];
-            int alpha = RendererEffects.computeFadeAlpha(dist, nearQ, farQ, fadeQ);
+            int alpha = RenderEffects.computeFadeAlpha(dist, nearQ, farQ, fadeNearQ, fadeFarQ);
             if (alpha <= 0) {
                 continue;
             }
-            int blendedRGB = RendererEffects.interpolateColor(dist, nearQ, farQ, nearColor, farColor, exponent);
+            int blendedRGB = RenderEffects.interpolateColor(dist, nearQ, farQ, nearColor, farColor);
             int r = (blendedRGB >> 16) & 0xFF;
             int g = (blendedRGB >> 8) & 0xFF;
             int b = blendedRGB & 0xFF;
             int finalColor = (alpha << 24) | (r << 16) | (g << 8) | b;
-            drawVertex(sx, sy, finalColor);
+            RenderVertex.drawVertex(shape, width, height, frameBuffer, sx, sy, finalColor);
         }
-    }
-
-    private void drawVertex(int x, int y, int color) {
-        int alpha = (color >> 24) & 0xFF;
-        drawX(x, y, color, alpha);
-    }
-
-    private void drawX(int x, int y, int color, int alpha) {
-        if ((x < 1) || (x > width) || (y < 1) || (y > height)) {
-            return;
-        }
-        int index = (y - 1) * width + (x + 1);
-        frameBuffer[index] = RendererEffects.blendPixel(frameBuffer[index], color, alpha);
-
-        index = (y + 1) * width + (x + 1);
-        frameBuffer[index] = RendererEffects.blendPixel(frameBuffer[index], color, alpha);
-
-        index = (y + 1) * width + (x - 1);
-        frameBuffer[index] = RendererEffects.blendPixel(frameBuffer[index], color, alpha);
-
-        index = (y - 1) * width + (x - 1);
-        frameBuffer[index] = RendererEffects.blendPixel(frameBuffer[index], color, alpha);
-
-        index = (y) * width + (x);
-        frameBuffer[index] = RendererEffects.blendPixel(frameBuffer[index], color, alpha);
-    }
-    
-    private void drawP(int x, int y, int color, int alpha) {
-        if ((x < 0) || (x >= width) || (y < 0) || (y >= height)) {
-            return;
-        }
-        int index = (y) * width + (x);
-        //if (frameBuffer[index] == BACKGROUND_COLOR){
-        //    frameBuffer[index] = color;
-        //} else {
-            frameBuffer[index] = RendererEffects.blendPixel(frameBuffer[index], color, alpha);
-        //}
     }
 
     private int[] projectPointToScreen(int[] r, int[] p) {

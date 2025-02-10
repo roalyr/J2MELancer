@@ -10,6 +10,7 @@ public class Model {
     public int[][] vertices; // each is [x,y,z] in Q24.8
     public int[][] edges;    // pairs of indices
 
+    
     public int boundingSphereRadius;
     
     public Model(int[][] vertices, int[][] edges, int boundingSphereRadius) {

@@ -18,8 +18,8 @@ public class Scene {
     private Perspective perspective;
 
     // Movement & rotation increments in Q24.8
-    private static final int MOVE_STEP = FixedBaseMath.toQ24_8(5.0f);
-    private static final int ROT_STEP = FixedBaseMath.toQ24_8(0.05f);
+    private static final int MOVE_STEP = FixedBaseMath.toQ24_8(0.1f);
+    private static final int ROT_STEP = FixedBaseMath.toQ24_8(0.01f);
 
     public Scene(int capacity, int fovQ, int aspectQ, int nearQ, int farQ) {
         objects = new Vector(capacity);
@@ -73,20 +73,20 @@ public class Scene {
     //System.out.print(this.fovQ+"\n");
     }
 
-    public void handleKeyPressed(int keyCode, int gameAction) {
+    public void handleKeyPressed(int keyCode, int gameAction, int moveMultiplier) {
 
         // Directional keys
         if (gameAction == Canvas.UP || keyCode == Canvas.KEY_NUM2) {
-            camera.addPitch(ROT_STEP);
+            camera.addPitch(-ROT_STEP * moveMultiplier);
         }
         if (gameAction == Canvas.DOWN || keyCode == Canvas.KEY_NUM8) {
-            camera.addPitch(-ROT_STEP);
+            camera.addPitch(ROT_STEP * moveMultiplier);
         }
         if (gameAction == Canvas.LEFT || keyCode == Canvas.KEY_NUM4) {
-            camera.addYaw(ROT_STEP);
+            camera.addYaw(ROT_STEP * moveMultiplier);
         }
         if (gameAction == Canvas.RIGHT || keyCode == Canvas.KEY_NUM6) {
-            camera.addYaw(-ROT_STEP);
+            camera.addYaw(-ROT_STEP * moveMultiplier);
         }
 
         // Fire key (depends on context)
@@ -96,13 +96,13 @@ public class Scene {
 
         // Additional keys
         if (keyCode == Canvas.KEY_NUM1) {
-            camera.moveForward(MOVE_STEP);
+            camera.moveForward(MOVE_STEP * moveMultiplier * moveMultiplier);
         }
         if (keyCode == Canvas.KEY_NUM3) {
             increaseFov();
         }
         if (keyCode == Canvas.KEY_NUM7) {
-            camera.moveForward(-MOVE_STEP);
+            camera.moveForward(-MOVE_STEP * moveMultiplier * moveMultiplier);
         }
         if (keyCode == Canvas.KEY_NUM9) {
             decreaseFov();
@@ -149,6 +149,10 @@ public class Scene {
         center[1] = obj.ty;
         center[2] = obj.tz;
         center[3] = FixedBaseMath.toQ24_8(1.0f);
+        
+        int cull_far = obj.material.farMarginQ24_8;
+        int cull_near = obj.material.nearMarginQ24_8;
+
 
         FixedMatMath.transformPoint(camMat, center, centerCam);
         int cx = centerCam[0];
@@ -168,17 +172,17 @@ public class Scene {
         int radius = -obj.boundingSphereRadiusScaled;
 
         // If the camera is inside the object's bounding sphere, consider the object visible.
-        if (distQ >= radius) {
-            FixedMatMath.releaseMatrix(center);
-            FixedMatMath.releaseMatrix(centerCam);
-            return true;
-        }
-        if (FixedBaseMath.q24_8_add(distQ, radius) < nearQ) {
-            FixedMatMath.releaseMatrix(center);
-            FixedMatMath.releaseMatrix(centerCam);
-            return false;
-        }
-        if (FixedBaseMath.q24_8_sub(distQ, radius) > farQ) {
+        //if (distQ >= radius) {
+            //FixedMatMath.releaseMatrix(center);
+            //FixedMatMath.releaseMatrix(centerCam);
+            //return true;
+        //}
+        //if (FixedBaseMath.q24_8_add(distQ, radius) < cull_near) {
+        //    FixedMatMath.releaseMatrix(center);
+        //    FixedMatMath.releaseMatrix(centerCam);
+        //    return false;
+        //}
+        if (FixedBaseMath.q24_8_add(distQ, radius) > cull_far) {
             FixedMatMath.releaseMatrix(center);
             FixedMatMath.releaseMatrix(centerCam);
             return false;

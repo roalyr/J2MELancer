@@ -7,6 +7,7 @@ import Renderer.Model;
  * Generates a UV sphere in Q24.8 fixed-point format, wireframe style.
  */
 public class Sphere {
+;
 
     /**
      * Creates a UV-sphere model with the given number of horizontal
@@ -19,14 +20,14 @@ public class Sphere {
      * @return a ModelQ24_8 representing the sphere
      */
     public static Model create(int numSegments, int numRings) {
-        int[][] verts = generateVertices(numSegments, numRings);
+        int[][] vertices = generateVertices(numSegments, numRings);
         int[][] edges = generateEdges(numSegments, numRings);
 
         // For a normalized sphere in [-1..+1], radius = 1.0
         // (If you consider the sphere in [-0.5..+0.5], adjust as needed.)
         int boundingSphere = FixedBaseMath.toQ24_8(1.0f);
 
-        return new Model(verts, edges, boundingSphere);
+        return new Model(vertices, edges, boundingSphere);
     }
 
     /**
@@ -40,13 +41,15 @@ public class Sphere {
 
         for (int i = 0; i <= numRings; i++) {
             float phi = (float) Math.PI * i / numRings;  // 0..PI
-            int sinPhi = FixedBaseMath.toQ24_8((float)Math.sin(phi));
-            int cosPhi = FixedBaseMath.toQ24_8((float)Math.cos(phi));
+
+            int sinPhi = FixedBaseMath.toQ24_8((float) Math.sin(phi));
+            int cosPhi = FixedBaseMath.toQ24_8((float) Math.cos(phi));
 
             for (int j = 0; j <= numSegments; j++) {
-                float theta = 2.0f * (float)Math.PI * j / numSegments; // 0..2PI
-                int sinTheta = FixedBaseMath.toQ24_8((float)Math.sin(theta));
-                int cosTheta = FixedBaseMath.toQ24_8((float)Math.cos(theta));
+                float theta = 2.0f * (float) Math.PI * j / numSegments; // 0..2PI
+
+                int sinTheta = FixedBaseMath.toQ24_8((float) Math.sin(theta));
+                int cosTheta = FixedBaseMath.toQ24_8((float) Math.cos(theta));
 
                 // x = sinPhi * cosTheta
                 // y = cosPhi
@@ -55,7 +58,7 @@ public class Sphere {
                 int y = cosPhi;
                 int z = FixedBaseMath.q24_8_mul(sinTheta, sinPhi);
 
-                verts[vertexIndex++] = new int[]{ x, y, z };
+                verts[vertexIndex++] = new int[]{x, y, z};
             }
         }
         return verts;
@@ -79,9 +82,9 @@ public class Sphere {
                 int p2 = p0 + numSegments + 1;
 
                 // horizontal edge
-                edges[edgeIndex++] = new int[]{ p0, p1 };
+                edges[edgeIndex++] = new int[]{p0, p1};
                 // vertical edge
-                edges[edgeIndex++] = new int[]{ p0, p2 };
+                edges[edgeIndex++] = new int[]{p0, p2};
             }
         }
         return edges;
