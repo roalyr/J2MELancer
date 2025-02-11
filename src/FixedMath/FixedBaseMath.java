@@ -46,19 +46,23 @@ package FixedMath;
  * Note: These ranges are computed using the full 64-bit signed range. In practice, you may
  * want to clamp results to a smaller range.
  */
-
 public final class FixedBaseMath {
 
-    public static final int FIXED_SHIFT = 12;
+    // Value 22 is a decent compromise between range and precision, especially for sqrt.
+    // Max object size should be 1e5 (?)
+    public static final int FIXED_SHIFT = 22;
     public static final long FIXED_SCALE = 1L << FIXED_SHIFT;
-
     public static final long MAX_FIXED = Long.MAX_VALUE;
     public static final long MIN_FIXED = Long.MIN_VALUE;
 
     public static long toFixed(float val) {
         float temp = val * FIXED_SCALE;
-        if (temp > MAX_FIXED) return MAX_FIXED;
-        if (temp < MIN_FIXED) return MIN_FIXED;
+        if (temp > MAX_FIXED) {
+            return MAX_FIXED;
+        }
+        if (temp < MIN_FIXED) {
+            return MIN_FIXED;
+        }
         return (long) temp;
     }
 
@@ -72,48 +76,71 @@ public final class FixedBaseMath {
 
     public static long fixedAdd(long a, long b) {
         long result = a + b;
-        if (result > MAX_FIXED) return MAX_FIXED;
-        if (result < MIN_FIXED) return MIN_FIXED;
+        if (result > MAX_FIXED) {
+            //System.out.print("\n Addition overflow \n");
+            return MAX_FIXED;
+        }
+        if (result < MIN_FIXED) {
+            //System.out.print("\n Addition underflow \n");
+            return MIN_FIXED;
+        }
         return result;
     }
 
     public static long fixedSub(long a, long b) {
         long result = a - b;
-        if (result > MAX_FIXED) return MAX_FIXED;
-        if (result < MIN_FIXED) return MIN_FIXED;
+        if (result > MAX_FIXED) {
+            //System.out.print("\n Subtraction overflow \n");
+            return MAX_FIXED;
+        }
+        if (result < MIN_FIXED) {
+            //System.out.print("\n Subtraction underflow \n");
+            return MIN_FIXED;
+        }
         return result;
     }
 
     public static long fixedMul(long a, long b) {
         long result = (a * b) >> FIXED_SHIFT;
-        if (result > MAX_FIXED) return MAX_FIXED;
-        if (result < MIN_FIXED) return MIN_FIXED;
+        if (result > MAX_FIXED) {
+            //System.out.print("\n Multiplication overflow \n");
+            return MAX_FIXED;
+        }
+        if (result < MIN_FIXED) {
+            //System.out.print("\n Multiplication underflow \n");
+            return MIN_FIXED;
+        }
         return result;
     }
 
     public static long fixedDiv(long a, long b) {
         if (b == 0) {
+            //System.out.print("\n Division by zero \n");
             return (a >= 0) ? MAX_FIXED : MIN_FIXED;
         }
         long result = (a << FIXED_SHIFT) / b;
-        if (result > MAX_FIXED) return MAX_FIXED;
-        if (result < MIN_FIXED) return MIN_FIXED;
+        if (result > MAX_FIXED) {
+            //System.out.print("\n Division overflow \n");
+            return MAX_FIXED;
+        }
+        if (result < MIN_FIXED) {
+            //System.out.print("\n Division underflow \n");
+            return MIN_FIXED;
+        }
         return result;
     }
 
-    public static long sqrt(long x) {
-        if (x <= 0) {
-            return 0;
-        }
-        int iterations = 10;
-        long guess = x;
-        for (int i = 0; i < iterations; i++) {
-            long div = fixedDiv(x, guess);
-            long sum = fixedAdd(guess, div);
-            guess = sum >> 1;
-        }
-        return guess;
-    }
+
+
+public static long sqrt(long x) {
+    if (x <= 0) return 0;
+
+    int F = FixedBaseMath.FIXED_SHIFT; // Supports arbitrary shift F
+    double value = (double) x / (1L << F); // Convert fixed to float
+    double sqrtValue = Math.sqrt(value);  // Compute sqrt in floating-point
+    return (long) (sqrtValue * (1L << F)); // Convert back to fixed
+}
+
 
     public static long pow(long base, float exponent) {
         if (exponent == 0) {

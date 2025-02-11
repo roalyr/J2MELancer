@@ -51,7 +51,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 0xFF1D635B, // Color near
                 0xFF093612, // Color far
                 FixedBaseMath.toFixed(1f), // Material z-near
-                FixedBaseMath.toFixed(50000f), // Material z-far
+                FixedBaseMath.toFixed(1e6f), // Material z-far
                 FixedBaseMath.toFixed(100f), // Alpha ramp distance near
                 FixedBaseMath.toFixed(5000f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
@@ -80,9 +80,9 @@ public class CanvasScene extends Canvas implements Runnable {
                 0xFFAA5533, // Color near
                 0xAA334411, // Color far
                 FixedBaseMath.toFixed(1f), // Material z-near
-                FixedBaseMath.toFixed(500000f), // Material z-far
+                FixedBaseMath.toFixed(1e6f), // Material z-far
                 FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(100000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1000f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
@@ -107,7 +107,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 0xFFAA5533, // Color near
                 0xAA334411, // Color far
                 FixedBaseMath.toFixed(1f), // Material z-near
-                FixedBaseMath.toFixed(500000f), // Material z-far
+                FixedBaseMath.toFixed(1e6f), // Material z-far
                 FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
                 FixedBaseMath.toFixed(100000f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
@@ -134,7 +134,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 0x88AA9966, // Color near
                 0x88334411, // Color far
                 FixedBaseMath.toFixed(1f), // Material z-near
-                FixedBaseMath.toFixed(500000f), // Material z-far
+                FixedBaseMath.toFixed(1e6f), // Material z-far
                 FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
                 FixedBaseMath.toFixed(100000f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
@@ -201,20 +201,20 @@ public class CanvasScene extends Canvas implements Runnable {
         model = RandomCloud.create(16, Constants.Common.SEED + 1);
 
         sceneObject = new SceneObject(model);
-        sceneObject.scale = FixedBaseMath.toFixed(1e6f);
+        sceneObject.scale = FixedBaseMath.toFixed(1e5f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         // Example: set a material on this sphere (covered below)
         sceneObject.material = new Material(
-                0xFF1155FF, // Color near
+                0xFF88AAFF, // Color near
                 0xFF1155FF, // Color far
                 FixedBaseMath.toFixed(0f), // Material z-near
                 FixedBaseMath.toFixed(1e6f), // Material z-far
-                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(1f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1000f), // Alpha ramp distance far
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_X, // Primitive shape
+                RenderEffects.SHAPE_P, // Primitive shape
                 2);  // Dither level
 
         scene.addObject(sceneObject);
@@ -225,7 +225,7 @@ public class CanvasScene extends Canvas implements Runnable {
         model = RandomCloud.create(64, Constants.Common.SEED + 10);
 
         sceneObject = new SceneObject(model);
-        sceneObject.scale = FixedBaseMath.toFixed(1e6f);
+        sceneObject.scale = FixedBaseMath.toFixed(1e5f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         // Example: set a material on this sphere (covered below)
@@ -234,8 +234,8 @@ public class CanvasScene extends Canvas implements Runnable {
                 0xFFAAAA00, // Color far
                 FixedBaseMath.toFixed(0f), // Material z-near
                 FixedBaseMath.toFixed(1e6f), // Material z-far
-                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(1f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1000f), // Alpha ramp distance far
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
@@ -248,7 +248,7 @@ public class CanvasScene extends Canvas implements Runnable {
         model = RandomCloud.create(128, Constants.Common.SEED + 100);
 
         sceneObject = new SceneObject(model);
-        sceneObject.scale = FixedBaseMath.toFixed(1e6f);
+        sceneObject.scale = FixedBaseMath.toFixed(1e5f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         // Example: set a material on this sphere (covered below)
@@ -257,8 +257,8 @@ public class CanvasScene extends Canvas implements Runnable {
                 0xFFAA0000, // Color far
                 FixedBaseMath.toFixed(0f), // Material z-near
                 FixedBaseMath.toFixed(1e6f), // Material z-far
-                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(1f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1000f), // Alpha ramp distance far
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape

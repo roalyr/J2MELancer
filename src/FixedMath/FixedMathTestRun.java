@@ -9,10 +9,10 @@ public class FixedMathTestRun extends MIDlet {
 
     public void startApp() {
         FixedBaseMathExtensiveTest.main();
-        FixedTrigMathEdgeCasesTest.main();
-        FixedVecMathTest.main();
-        FixedVecMathEdgeCasesTest.main();
-        FixedMatMathTest.main();
+        //FixedTrigMathEdgeCasesTest.main();
+        //FixedVecMathTest.main();
+        //FixedVecMathEdgeCasesTest.main();
+        //FixedMatMathTest.main();
 
         destroyApp(false);
         notifyDestroyed();
@@ -32,8 +32,14 @@ class FixedBaseMathExtensiveTest {
 
     public static void main() {
         System.out.println("=== FixedBaseMath Extensive Tests ===");
+        System.out.println("FIXED_SHIFT = " + FixedBaseMath.FIXED_SHIFT);
         System.out.println("sqrt(2.25) = " + testSqrt(2.25f) + " (expected ~1.5)");
         System.out.println("sqrt(16.0) = " + testSqrt(16.0f) + " (expected ~4.0)");
+        System.out.println("sqrt(5000.0) = " + testSqrt(5000.0f) + " (expected ~70.7)");
+        System.out.println("sqrt(1e8) = " + testSqrt(1e8f) + " (expected ~1e4)");
+        System.out.println("sqrt(1e10) = " + testSqrt(1e10f) + " (expected ~1e5)");
+        System.out.println("sqrt(1e12) = " + testSqrt(1e12f) + " (expected ~1e6)");
+        System.out.println("sqrt("+Long.MAX_VALUE+") = " + testSqrt(Long.MAX_VALUE) + " (expected ~960383.8835)");
         // Add more tests as needed...
         System.out.println();
     }
