@@ -99,12 +99,12 @@ public final class FixedTrigMath {
         return FixedBaseMath.fixedMul(sqrtDelta, poly);
     }
 
-    public static long degreesToRadians(long degrees) {
-        return FixedBaseMath.toFixed((float) (degrees * Math.PI / 180.0));
+    public static float degreesToRadians(float degrees) {
+        return (degrees * (float) Math.PI / 180.0f);
     }
 
-    public static float radiansToDegrees(long radians) {
-        return FixedBaseMath.toFloat(radians) * (180.0f / (float) Math.PI);
+    public static float radiansToDegrees(float radians) {
+        return (radians) * (180.0f / (float) Math.PI);
     }
 
     private FixedTrigMath() {

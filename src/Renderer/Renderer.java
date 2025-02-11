@@ -10,7 +10,7 @@ import Constants.Common;
 public class Renderer {
 
     // Variables
-    private final int BACKGROUND_COLOR = 0xFF000000;
+    public static final int BACKGROUND_COLOR = 0xFF000000;
     private int width;
     private int height;
     private long precalc_halfW_Q24_8;
@@ -29,8 +29,7 @@ public class Renderer {
     private long[] scratch3b = new long[3];
     private long[] scratch4a = new long[4];
     private long[] scratch4b = new long[4];
-    private int[] screenP0;
-    private int[] screenP1;
+
 
     public Renderer() {
         this.width = SharedData.display_width;
@@ -136,10 +135,10 @@ public class Renderer {
         int[][] edges = obj.model.edges;
         long[][] verts = obj.model.vertices;
 
-        long nearQ = mat.nearMarginQ24_8;
-        long farQ = mat.farMarginQ24_8;
-        long fadeNearQ = mat.fadeDistanceNearQ24_8;
-        long fadeFarQ = mat.fadeDistanceFarQ24_8;
+        long nearQ = mat.nearMarginQ;
+        long farQ = mat.farMarginQ;
+        long fadeNearQ = mat.fadeDistanceNearQ;
+        long fadeFarQ = mat.fadeDistanceFarQ;
         int nearColor = mat.colorNear;
         int farColor = mat.colorFar;
         int ditherLevel = mat.ditherLevel;
@@ -198,10 +197,10 @@ public class Renderer {
         if (mat == null) {
             return;
         }
-        long nearQ = mat.nearMarginQ24_8;
-        long farQ = mat.farMarginQ24_8;
-        long fadeNearQ = mat.fadeDistanceNearQ24_8;
-        long fadeFarQ = mat.fadeDistanceFarQ24_8;
+        long nearQ = mat.nearMarginQ;
+        long farQ = mat.farMarginQ;
+        long fadeNearQ = mat.fadeDistanceNearQ;
+        long fadeFarQ = mat.fadeDistanceFarQ;
         int nearColor = mat.colorNear;
         int farColor = mat.colorFar;
         int shape = mat.primitiveShape;

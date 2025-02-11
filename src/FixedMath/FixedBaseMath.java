@@ -48,9 +48,9 @@ package FixedMath;
  */
 public final class FixedBaseMath {
 
-    // Value 22 is a decent compromise between range and precision, especially for sqrt.
-    // Max object size should be 1e5 (?)
-    public static final int FIXED_SHIFT = 22;
+
+    // Should be no bigger than 22, but not too small either.
+    public static final int FIXED_SHIFT = 21;
     public static final long FIXED_SCALE = 1L << FIXED_SHIFT;
     public static final long MAX_FIXED = Long.MAX_VALUE;
     public static final long MIN_FIXED = Long.MIN_VALUE;
@@ -130,17 +130,19 @@ public final class FixedBaseMath {
         return result;
     }
 
+    public static long sqrt(long x) {
+        if (x <= 0) {
+            return 0;
+        }
+        int F = FixedBaseMath.FIXED_SHIFT; // Supports arbitrary shift F
 
+        double value = (double) x / (1L << F); // Convert fixed to float
 
-public static long sqrt(long x) {
-    if (x <= 0) return 0;
+        double sqrtValue = Math.sqrt(value);  // Compute sqrt in floating-point
 
-    int F = FixedBaseMath.FIXED_SHIFT; // Supports arbitrary shift F
-    double value = (double) x / (1L << F); // Convert fixed to float
-    double sqrtValue = Math.sqrt(value);  // Compute sqrt in floating-point
-    return (long) (sqrtValue * (1L << F)); // Convert back to fixed
-}
+        return (long) (sqrtValue * (1L << F)); // Convert back to fixed
 
+    }
 
     public static long pow(long base, float exponent) {
         if (exponent == 0) {
@@ -172,6 +174,14 @@ public static long sqrt(long x) {
         long term3 = fixedMul(toFixed(expFrac * (expFrac - 1) / 2), fixedMul(x, x));
         long term4 = fixedMul(toFixed(expFrac * (expFrac - 1) * (expFrac - 2) / 6), fixedMul(x, fixedMul(x, x)));
         return fixedAdd(fixedAdd(term1, term2), fixedAdd(term3, term4));
+    }
+
+    public static long fixedHypot3D(long x, long y, long z) {
+        long squareX = fixedMul(x, x);
+        long squareY = fixedMul(y, y);
+        long squareZ = fixedMul(z, z);
+        long sumSquares = fixedAdd(fixedAdd(squareX, squareY), squareZ);
+        return sqrt(sumSquares);
     }
 
     private FixedBaseMath() {

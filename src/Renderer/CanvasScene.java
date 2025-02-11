@@ -1,6 +1,9 @@
 package Renderer;
 
 import FixedMath.FixedBaseMath;
+import FixedMath.FixedTrigMath;
+
+import java.io.IOException;
 import javax.microedition.lcdui.*;
 import Models.*;
 
@@ -15,6 +18,8 @@ public class CanvasScene extends Canvas implements Runnable {
     public int moveMultiplier = 1;
     private final int MULTIPLIER_STEP = 1;
     private final int MULTIPLIER_MAX = 100;
+    
+    private static int DITHER_LEVEL_GLOBAL = 0;
 
     public CanvasScene() {
         setFullScreenMode(true);
@@ -34,61 +39,129 @@ public class CanvasScene extends Canvas implements Runnable {
 
 
     private void addObjects() {
-        // ADD OBJECTS 
-        // Example: Planet small
-        model = Sphere.create(12, 6);
+        try {
+            // Example: Ship
+            model = ObjParser.create("/Models/ObjModels/TestShip.obj");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
         sceneObject = new SceneObject(model);
         sceneObject.tx = FixedBaseMath.toFixed(20.0f);
         sceneObject.ty = FixedBaseMath.toFixed(10.0f);
         sceneObject.tz = FixedBaseMath.toFixed(-500.0f);
-        sceneObject.rotX = FixedBaseMath.toFixed(0.1f);
+        sceneObject.rotX = FixedBaseMath.toFixed(1f);
         sceneObject.rotY = FixedBaseMath.toFixed(0.4f);
         sceneObject.scale = FixedBaseMath.toFixed(200.0f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         sceneObject.material = new Material(
-                0xFF1D635B, // Color near
-                0xFF093612, // Color far
+                0xFFBBBBAA, // Color near
+                0xFFBBBBAA, // Color far
                 FixedBaseMath.toFixed(1f), // Material z-near
-                FixedBaseMath.toFixed(1e6f), // Material z-far
-                FixedBaseMath.toFixed(100f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(5000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1e3f), // Material z-far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1e2f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                4);  // Dither level
+                DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
         
+        try {
+            // Example: Ship
+            model = ObjParser.create("/Models/ObjModels/TestShip.obj");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        sceneObject = new SceneObject(model);
+        sceneObject.tx = FixedBaseMath.toFixed(200.0f);
+        sceneObject.ty = FixedBaseMath.toFixed(100.0f);
+        sceneObject.tz = FixedBaseMath.toFixed(-500.0f);
+        sceneObject.rotX = FixedBaseMath.toFixed(1f);
+        sceneObject.rotY = FixedBaseMath.toFixed(0.4f);
+        sceneObject.scale = FixedBaseMath.toFixed(200.0f);
+        sceneObject.updateBoundingSphereRadiusScaled();
+
+        sceneObject.material = new Material(
+                0xFFFF0022, // Color near
+                0xFFBBBBAA, // Color far
+                FixedBaseMath.toFixed(1f), // Material z-near
+                FixedBaseMath.toFixed(1e4f), // Material z-far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1e3f), // Alpha ramp distance far
+                RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
+                1, // Primitive width (TODO)
+                RenderEffects.SHAPE_P, // Primitive shape
+                DITHER_LEVEL_GLOBAL);  // Dither level
+
+        scene.addObject(sceneObject);
+        
+        try {
+            // Example: Ship
+            model = ObjParser.create("/Models/ObjModels/TestShip.obj");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        sceneObject = new SceneObject(model);
+        sceneObject.tx = FixedBaseMath.toFixed(400.0f);
+        sceneObject.ty = FixedBaseMath.toFixed(200.0f);
+        sceneObject.tz = FixedBaseMath.toFixed(-500.0f);
+        sceneObject.rotX = FixedBaseMath.toFixed(1f);
+        sceneObject.rotY = FixedBaseMath.toFixed(0.4f);
+        sceneObject.scale = FixedBaseMath.toFixed(200.0f);
+        sceneObject.updateBoundingSphereRadiusScaled();
+
+        sceneObject.material = new Material(
+                0xFF77AAFF, // Color near
+                0xFFBBBBAA, // Color far
+                FixedBaseMath.toFixed(1f), // Material z-near
+                FixedBaseMath.toFixed(1e5f), // Material z-far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1e4f), // Alpha ramp distance far
+                RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
+                1, // Primitive width (TODO)
+                RenderEffects.SHAPE_P, // Primitive shape
+                DITHER_LEVEL_GLOBAL);  // Dither level
+
+        scene.addObject(sceneObject);
         
          // ADD OBJECTS 
-        // Example: Planet big
-        model = Sphere.create(24, 12);
+        // Example: Planet
+        try {
+            model = ObjParser.create("/Models/ObjModels/TestPlanet.obj");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
         sceneObject = new SceneObject(model);
         sceneObject.tx = FixedBaseMath.toFixed(15000.0f);
         sceneObject.ty = FixedBaseMath.toFixed(-30000.0f);
         sceneObject.tz = FixedBaseMath.toFixed(-50000.0f);
-        sceneObject.rotX = FixedBaseMath.toFixed(0.2f);
+        sceneObject.rotX = FixedBaseMath.toFixed(FixedTrigMath.degreesToRadians(0)+0.2f);
         sceneObject.rotY = FixedBaseMath.toFixed(0.8f);
         sceneObject.rotZ = FixedBaseMath.toFixed(-0.8f);
         sceneObject.scale = FixedBaseMath.toFixed(10000.0f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         sceneObject.material = new Material(
-                0xFFAA5533, // Color near
-                0xAA334411, // Color far
+                0xFF772233, // Color near
+                0xFF111111, // Color far
                 FixedBaseMath.toFixed(1f), // Material z-near
                 FixedBaseMath.toFixed(1e6f), // Material z-far
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1e5f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                4);  // Dither level
+                DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
+     
+        
         
         // Ring 1
         model = RingHorizontal.create(36);
@@ -108,12 +181,12 @@ public class CanvasScene extends Canvas implements Runnable {
                 0xAA334411, // Color far
                 FixedBaseMath.toFixed(1f), // Material z-near
                 FixedBaseMath.toFixed(1e6f), // Material z-far
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(100000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1e5f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                4);  // Dither level
+                DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
         
@@ -135,12 +208,12 @@ public class CanvasScene extends Canvas implements Runnable {
                 0x88334411, // Color far
                 FixedBaseMath.toFixed(1f), // Material z-near
                 FixedBaseMath.toFixed(1e6f), // Material z-far
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(100000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1e5f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                4);  // Dither level
+                DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
 
@@ -166,7 +239,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                2);  // Dither level
+                DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
         
@@ -176,9 +249,9 @@ public class CanvasScene extends Canvas implements Runnable {
         model = Cube.create(5);
 
         sceneObject = new SceneObject(model);
-        sceneObject.tx = FixedBaseMath.toFixed(-200.0f);
-        sceneObject.ty = FixedBaseMath.toFixed(500.0f);
-        sceneObject.tz = FixedBaseMath.toFixed(-5000.0f);
+        sceneObject.tx = FixedBaseMath.toFixed(2000.0f);
+        sceneObject.ty = FixedBaseMath.toFixed(-500.0f);
+        sceneObject.tz = FixedBaseMath.toFixed(-10000.0f);
         sceneObject.scale = FixedBaseMath.toFixed(50.0f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
@@ -186,13 +259,13 @@ public class CanvasScene extends Canvas implements Runnable {
                 0xFFAAAAFF, // Color near
                 0xFFFF2222, // Color far
                 FixedBaseMath.toFixed(1f), // Material z-near
-                FixedBaseMath.toFixed(10000f), // Material z-far
-                FixedBaseMath.toFixed(10f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1e5f), // Material z-far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1e4f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                2);  // Dither level
+                DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
 
@@ -215,7 +288,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                2);  // Dither level
+                DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
         
@@ -239,7 +312,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                2);  // Dither level
+                DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
         
@@ -262,7 +335,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
-                2);  // Dither level
+                DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
     }

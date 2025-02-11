@@ -24,8 +24,37 @@ public class RenderLine {
     };
 
     public static void drawLineDither(int shape, int width, int height, int[] frameBuffer,
-                                       int x0, int y0, int x1, int y1, int color, int ditherSize) {
+            int x0, int y0, int x1, int y1, int color, int ditherSize) {
         int alpha = (color >>> 24) & 0xFF;
+
+        // Early return if dithering is off
+        if (ditherSize == 0) {
+            int dx = Math.abs(x1 - x0);
+            int dy = Math.abs(y1 - y0);
+            int sx = (x0 < x1) ? 1 : -1;
+            int sy = (y0 < y1) ? 1 : -1;
+            int err = dx - dy;
+
+            while (true) {
+                if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height) {
+                        RenderEffects.drawMarker(shape, width, height, frameBuffer, x0, y0, color);
+                }
+                if (x0 == x1 && y0 == y1) {
+                    break;
+                }
+                int e2 = err << 1;
+                if (e2 > -dy) {
+                    err -= dy;
+                    x0 += sx;
+                }
+                if (e2 < dx) {
+                    err += dx;
+                    y0 += sy;
+                }
+            }
+        }
+
+
         int coverageShift;
         byte[][] ditherMatrix;
         int mask;
@@ -55,7 +84,7 @@ public class RenderLine {
         }
 
         if ((x0 < 0 && x1 < 0) || (x0 >= width && x1 >= width) ||
-            (y0 < 0 && y1 < 0) || (y0 >= height && y1 >= height)) {
+                (y0 < 0 && y1 < 0) || (y0 >= height && y1 >= height)) {
             return;
         }
 
@@ -68,39 +97,9 @@ public class RenderLine {
         while (true) {
             if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height) {
                 int threshold = ditherMatrix[y0 & mask][x0 & mask];
-                if (coverage > threshold) {
+                if (coverage > threshold - 1) {
                     RenderEffects.drawMarker(shape, width, height, frameBuffer, x0, y0, color);
                 }
-            }
-            if (x0 == x1 && y0 == y1) {
-                break;
-            }
-            int e2 = err << 1;
-            if (e2 > -dy) {
-                err -= dy;
-                x0 += sx;
-            }
-            if (e2 < dx) {
-                err += dx;
-                y0 += sy;
-            }
-        }
-    }
-
-    public static void drawLine(int shape, int width, int height, int[] frameBuffer,
-                                int x0, int y0, int x1, int y1, int color) {
-        if ((x0 < 0 && x1 < 0) || (x0 >= width && x1 >= width) ||
-            (y0 < 0 && y1 < 0) || (y0 >= height && y1 >= height)) {
-            return;
-        }
-        int dx = Math.abs(x1 - x0);
-        int dy = Math.abs(y1 - y0);
-        int sx = (x0 < x1) ? 1 : -1;
-        int sy = (y0 < y1) ? 1 : -1;
-        int err = dx - dy;
-        while (true) {
-            if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height) {
-                RenderEffects.drawMarker(shape, width, height, frameBuffer, x0, y0, color);
             }
             if (x0 == x1 && y0 == y1) {
                 break;

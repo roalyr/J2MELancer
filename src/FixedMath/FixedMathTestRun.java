@@ -65,7 +65,7 @@ class FixedTrigMathEdgeCasesTest {
         System.out.println("-----------------------------------------------------------------------------------------------");
         for (long i = 0; i < TEST_DEGREES.length; i++) {
             long deg = TEST_DEGREES[(int)i];
-            long angleQ = FixedTrigMath.degreesToRadians(deg);
+            long angleQ = FixedBaseMath.toFixed(FixedTrigMath.degreesToRadians(deg));
             long sinFix = FixedTrigMath.sin(angleQ);
             long cosFix = FixedTrigMath.cos(angleQ);
             long tanFix = FixedTrigMath.tan(angleQ);

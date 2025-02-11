@@ -126,8 +126,8 @@ public class Scene {
         center[2] = obj.tz;
         center[3] = FixedBaseMath.toFixed(1.0f);
         
-        long cull_far = obj.material.farMarginQ24_8;
-        long cull_near = obj.material.nearMarginQ24_8;
+        long cull_far = obj.material.farMarginQ;
+        long cull_near = obj.material.nearMarginQ;
 
         FixedMatMath.transformPoint(camMat, center, centerCam);
         long cx = centerCam[0];
@@ -152,7 +152,7 @@ public class Scene {
             return false;
         }
         long halfFovDegQ = FixedBaseMath.fixedDiv(fovQ, FixedBaseMath.toFixed(2.0f));
-        long halfFovRadQ = FixedTrigMath.degreesToRadians(FixedBaseMath.toInt(halfFovDegQ));
+        long halfFovRadQ = FixedBaseMath.toFixed(FixedTrigMath.degreesToRadians(FixedBaseMath.toFloat(halfFovDegQ)));
         long tanHalfVertFovQ = FixedTrigMath.tan(halfFovRadQ);
         long tanHalfHorizFovQ = FixedBaseMath.fixedMul(tanHalfVertFovQ, aspectQ);
         long absCX = (cx < 0) ? -cx : cx;
