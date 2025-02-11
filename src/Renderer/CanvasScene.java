@@ -94,7 +94,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 FixedBaseMath.toFixed(1e3f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_P, // Primitive shape
+                RenderEffects.SHAPE_H, // Primitive shape
                 DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
@@ -124,7 +124,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 FixedBaseMath.toFixed(1e4f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_P, // Primitive shape
+                RenderEffects.SHAPE_X, // Primitive shape
                 DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
@@ -212,7 +212,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 FixedBaseMath.toFixed(1e5f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_P, // Primitive shape
+                RenderEffects.SHAPE_S, // Primitive shape
                 DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
@@ -238,7 +238,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 FixedBaseMath.toFixed(500f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_P, // Primitive shape
+                RenderEffects.SHAPE_S, // Primitive shape
                 DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
@@ -274,20 +274,20 @@ public class CanvasScene extends Canvas implements Runnable {
         model = RandomCloud.create(16, Constants.Common.SEED + 1);
 
         sceneObject = new SceneObject(model);
-        sceneObject.scale = FixedBaseMath.toFixed(1e5f);
+        sceneObject.scale = FixedBaseMath.toFixed(1e6f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         // Example: set a material on this sphere (covered below)
         sceneObject.material = new Material(
                 0xFF88AAFF, // Color near
                 0xFF1155FF, // Color far
-                FixedBaseMath.toFixed(0f), // Material z-near
+                FixedBaseMath.toFixed(1f), // Material z-near
                 FixedBaseMath.toFixed(1e6f), // Material z-far
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1e5f), // Alpha ramp distance far
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_P, // Primitive shape
+                RenderEffects.SHAPE_S, // Primitive shape
                 DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
@@ -298,17 +298,17 @@ public class CanvasScene extends Canvas implements Runnable {
         model = RandomCloud.create(64, Constants.Common.SEED + 10);
 
         sceneObject = new SceneObject(model);
-        sceneObject.scale = FixedBaseMath.toFixed(1e5f);
+        sceneObject.scale = FixedBaseMath.toFixed(1e6f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         // Example: set a material on this sphere (covered below)
         sceneObject.material = new Material(
                 0xFFAAAA00, // Color near
                 0xFFAAAA00, // Color far
-                FixedBaseMath.toFixed(0f), // Material z-near
+                FixedBaseMath.toFixed(1f), // Material z-near
                 FixedBaseMath.toFixed(1e6f), // Material z-far
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1e5f), // Alpha ramp distance far
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
                 RenderEffects.SHAPE_P, // Primitive shape
@@ -321,20 +321,20 @@ public class CanvasScene extends Canvas implements Runnable {
         model = RandomCloud.create(128, Constants.Common.SEED + 100);
 
         sceneObject = new SceneObject(model);
-        sceneObject.scale = FixedBaseMath.toFixed(1e5f);
+                sceneObject.scale = FixedBaseMath.toFixed(1e6f);
         sceneObject.updateBoundingSphereRadiusScaled();
 
         // Example: set a material on this sphere (covered below)
         sceneObject.material = new Material(
-                0xFFAA0000, // Color near
-                0xFFAA0000, // Color far
-                FixedBaseMath.toFixed(0f), // Material z-near
+                0xFFAA3300, // Color near
+                0xFF110000, // Color far
+                FixedBaseMath.toFixed(1f), // Material z-near
                 FixedBaseMath.toFixed(1e6f), // Material z-far
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance near
-                FixedBaseMath.toFixed(1000f), // Alpha ramp distance far
+                FixedBaseMath.toFixed(1f), // Alpha ramp distance near
+                FixedBaseMath.toFixed(1e5f), // Alpha ramp distance far
                 RenderEffects.TYPE_VERTICES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_P, // Primitive shape
+                RenderEffects.SHAPE_X, // Primitive shape
                 DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);

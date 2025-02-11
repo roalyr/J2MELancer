@@ -10,6 +10,7 @@ public final class RenderEffects {
     public static final int SHAPE_P = 0;
     public static final int SHAPE_H = 1;
     public static final int SHAPE_X = 2;
+    public static final int SHAPE_S = 3;
     
     private static final int ALPHA_THRESHOLD_LOCAL_HIGH = 250;
     private static final int ALPHA_THRESHOLD_LOCAL_LOW = 50;
@@ -93,7 +94,15 @@ public final class RenderEffects {
                 setPixel(width, height, frameBuffer, x - 1, y + 1, color);
                 setPixel(width, height, frameBuffer, x - 1, y - 1, color);
                 break;
+            case SHAPE_S:
+                setPixel(width, height, frameBuffer, x, y, color);
+                setPixel(width, height, frameBuffer, x, y + 1, color);
+                setPixel(width, height, frameBuffer, x + 1, y, color);
+                setPixel(width, height, frameBuffer, x + 1, y + 1, color);
+                
+                break;
             default:
+                setPixel(width, height, frameBuffer, x, y, color);
                 break;
         }
     }

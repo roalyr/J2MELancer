@@ -50,7 +50,7 @@ public final class FixedBaseMath {
 
 
     // Should be no bigger than 22, but not too small either.
-    public static final int FIXED_SHIFT = 21;
+    public static final int FIXED_SHIFT = 20;
     public static final long FIXED_SCALE = 1L << FIXED_SHIFT;
     public static final long MAX_FIXED = Long.MAX_VALUE;
     public static final long MIN_FIXED = Long.MIN_VALUE;
