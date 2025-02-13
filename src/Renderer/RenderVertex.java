@@ -2,7 +2,20 @@ package Renderer;
 
 public class RenderVertex {
 
-    public static void drawVertex(int shape, int width, int height, int[] frameBuffer, int x, int y, int color) {
-        RenderEffects.drawMarker(shape, width, height, frameBuffer, x, y, color);
+    /**
+     * Draw a single 'vertex' shape at (x, y) with given color and depth test.
+     */
+    public static void drawVertex(
+            int shape,
+            int width,
+            int height,
+            int[] frameBuffer,
+            long[] depthBuffer,
+            int x,
+            int y,
+            long z,
+            int color
+    ) {
+        RenderEffects.drawMarkerDepthTest(shape, width, height, frameBuffer, depthBuffer, x, y, color, z);
     }
 }

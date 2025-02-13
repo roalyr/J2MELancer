@@ -94,7 +94,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 FixedBaseMath.toFixed(1e3f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_H, // Primitive shape
+                RenderEffects.SHAPE_P, // Primitive shape
                 DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
@@ -124,7 +124,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 FixedBaseMath.toFixed(1e4f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_X, // Primitive shape
+                RenderEffects.SHAPE_P, // Primitive shape
                 DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
@@ -212,7 +212,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 FixedBaseMath.toFixed(1e5f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_S, // Primitive shape
+                RenderEffects.SHAPE_P, // Primitive shape
                 DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
@@ -238,7 +238,7 @@ public class CanvasScene extends Canvas implements Runnable {
                 FixedBaseMath.toFixed(500f), // Alpha ramp distance far
                 RenderEffects.TYPE_EDGES, // 0 - vertices, 1 - edges
                 1, // Primitive width (TODO)
-                RenderEffects.SHAPE_S, // Primitive shape
+                RenderEffects.SHAPE_P, // Primitive shape
                 DITHER_LEVEL_GLOBAL);  // Dither level
 
         scene.addObject(sceneObject);
