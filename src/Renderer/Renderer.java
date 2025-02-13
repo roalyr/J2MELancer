@@ -14,12 +14,13 @@ public class Renderer {
     private int height;
 
     // Pre-calculated half of screen width/height in fixed Q24.8
-    private long precalc_halfW_Q24_8;
-    private long precalc_halfH_Q24_8;
+    private long precalc_halfW_Q;
+    private long precalc_halfH_Q;
 
     // Clipping planes in Q24.8
-    private final long Z_NEAR_Q24_8;
-    private final long Z_FAR_Q24_8;
+    private final long Z_NEAR_Q;
+    private final long Z_FAR_Q;
+    private final long DENOM;
 
     private Vector renderables;
 
@@ -50,14 +51,15 @@ public class Renderer {
 
         this.renderables = new Vector();
 
-        this.Z_NEAR_Q24_8 = FixedBaseMath.toFixed(Common.Z_NEAR);
-        this.Z_FAR_Q24_8  = FixedBaseMath.toFixed(Common.Z_FAR);
+        this.Z_NEAR_Q = FixedBaseMath.toFixed(Common.Z_NEAR);
+        this.Z_FAR_Q  = FixedBaseMath.toFixed(Common.Z_FAR);
+        this.DENOM = FixedBaseMath.fixedSub(Z_FAR_Q, Z_NEAR_Q);
     }
 
     public void setRenderables(Vector renderables, long halfWidth, long halfHeight) {
         this.renderables = renderables;
-        this.precalc_halfW_Q24_8 = halfWidth;
-        this.precalc_halfH_Q24_8 = halfHeight;
+        this.precalc_halfW_Q = halfWidth;
+        this.precalc_halfH_Q = halfHeight;
     }
 
     public Vector getRenderables() {
@@ -165,7 +167,7 @@ public class Renderer {
         int ditherLevel = mat.ditherLevel;
         int shape = mat.primitiveShape;
 
-        origin = new long[] {0, 0, 0, FixedBaseMath.toFixed(1.0f)};
+        origin = new long[] {0, 0, 0, FixedBaseMath.FIXED1};
         centerCam = new long[4];
         FixedMatMath.transformPoint(finalM, origin, centerCam);
         long centerCamZ = centerCam[2];
@@ -192,7 +194,7 @@ public class Renderer {
             // For fade color, we can use midpoint or any heuristic:
             long distMid = FixedBaseMath.fixedDiv(
                     FixedBaseMath.fixedAdd(distA, distB),
-                    FixedBaseMath.toFixed(2.0f)
+                    FixedBaseMath.FIXED2
             );
 
             // Distance fade
@@ -200,9 +202,10 @@ public class Renderer {
             if (alphaFade <= 0) {
                 continue; // fully faded
             }
-            // Interpolate color
-            int blendedRGB = RenderEffects.interpolateColor(distMid, nearQ, farQ, nearColor, farColor);
-
+            // TODO: improve interpolation?
+            //int blendedRGB = RenderEffects.interpolateColor(distMid, nearQ, farQ, nearColor, farColor);
+            int blendedRGB = nearColor;
+            
             // Combine with local alpha
             int alphaOrig = (blendedRGB >>> 24) & 0xFF;
             int alphaCombined = (alphaOrig * alphaFade) >> 8;
@@ -263,8 +266,10 @@ public class Renderer {
             if (alphaFade <= 0) {
                 continue;
             }
-            int blendedRGB = RenderEffects.interpolateColor(dist, nearQ, farQ, nearColor, farColor);
-
+            // TODO: improve interpolation?
+            //int blendedRGB = RenderEffects.interpolateColor(dist, nearQ, farQ, nearColor, farColor);
+            int blendedRGB = nearColor;
+            
             // Combine final alpha
             int a = (blendedRGB >>> 24) & 0xFF;
             a = (a * alphaFade) >> 8;
@@ -301,8 +306,8 @@ public class Renderer {
         long y = FixedBaseMath.fixedDiv(p[1], p[3]);
         long z = p[2];
 
-        long halfW = precalc_halfW_Q24_8;
-        long halfH = precalc_halfH_Q24_8;
+        long halfW = precalc_halfW_Q;
+        long halfH = precalc_halfH_Q;
 
         long rx = FixedBaseMath.fixedAdd(halfW, FixedBaseMath.fixedMul(x, halfW));
         long ry = FixedBaseMath.fixedAdd(halfH, FixedBaseMath.fixedMul(y, halfH));
@@ -311,16 +316,16 @@ public class Renderer {
         int sy = FixedBaseMath.toInt(ry);
 
         // We also clamp normalized Z for 0..1 (for potential 2D debug or color interpolation):
-        long den = FixedBaseMath.fixedSub(Z_FAR_Q24_8, Z_NEAR_Q24_8);
+        long den = DENOM;
         if (den == 0) {
             return null;
         }
-        long zs = FixedBaseMath.fixedSub(Z_FAR_Q24_8, z);
+        long zs = FixedBaseMath.fixedSub(Z_FAR_Q, z);
         long z_mapped = FixedBaseMath.fixedDiv(zs, den);
         if (z_mapped < 0) {
             z_mapped = 0;
-        } else if (z_mapped > FixedBaseMath.toFixed(1f)) {
-            z_mapped = FixedBaseMath.toFixed(1f);
+        } else if (z_mapped > FixedBaseMath.FIXED1) {
+            z_mapped = FixedBaseMath.FIXED1;
         }
 
         reusableBuffer[0] = sx;

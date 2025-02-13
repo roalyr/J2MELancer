@@ -44,7 +44,7 @@ public class Scene {
 
     public void resetCamera() {
         camera.setPosition(0, 0, 0);
-        camera.setOrientation(new long[]{0, 0, 0, FixedBaseMath.toFixed(1.0f)});
+        camera.setOrientation(new long[]{0, 0, 0, FixedBaseMath.FIXED1});
     }
 
     public void increaseFov() {
@@ -124,10 +124,10 @@ public class Scene {
         center[0] = obj.tx;
         center[1] = obj.ty;
         center[2] = obj.tz;
-        center[3] = FixedBaseMath.toFixed(1.0f);
+        center[3] = FixedBaseMath.FIXED1;
         
         long cull_far = obj.material.farMarginQ;
-        long cull_near = obj.material.nearMarginQ;
+        //long cull_near = obj.material.nearMarginQ;
 
         FixedMatMath.transformPoint(camMat, center, centerCam);
         long cx = centerCam[0];
@@ -139,7 +139,7 @@ public class Scene {
             FixedMatMath.releaseMatrix(centerCam);
             return false;
         }
-        long invW = FixedBaseMath.fixedDiv(FixedBaseMath.toFixed(1.0f), cw);
+        long invW = FixedBaseMath.fixedDiv(FixedBaseMath.FIXED1, cw);
         cx = FixedBaseMath.fixedMul(cx, invW);
         cy = FixedBaseMath.fixedMul(cy, invW);
         cz = FixedBaseMath.fixedMul(cz, invW);
@@ -151,7 +151,7 @@ public class Scene {
             FixedMatMath.releaseMatrix(centerCam);
             return false;
         }
-        long halfFovDegQ = FixedBaseMath.fixedDiv(fovQ, FixedBaseMath.toFixed(2.0f));
+        long halfFovDegQ = FixedBaseMath.fixedDiv(fovQ, FixedBaseMath.FIXED2);
         long halfFovRadQ = FixedBaseMath.toFixed(FixedTrigMath.degreesToRadians(FixedBaseMath.toFloat(halfFovDegQ)));
         long tanHalfVertFovQ = FixedTrigMath.tan(halfFovRadQ);
         long tanHalfHorizFovQ = FixedBaseMath.fixedMul(tanHalfVertFovQ, aspectQ);

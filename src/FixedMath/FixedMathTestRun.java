@@ -133,8 +133,8 @@ class FixedVecMathTest {
 
     public static void main() {
         System.out.println("\n=== FixedVecMath Basic Tests ===\n");
-        long[] vecA = {FixedBaseMath.toFixed(1.0f), 0, 0};
-        long[] vecB = {0, FixedBaseMath.toFixed(2.0f), 0};
+        long[] vecA = {FixedBaseMath.FIXED1, 0, 0};
+        long[] vecB = {0, FixedBaseMath.FIXED2, 0};
 
 
         long angleFix = FixedVecMath.angleBetweenVectors(vecA, vecB);
@@ -164,7 +164,7 @@ class FixedVecMathEdgeCasesTest {
         long bigComp = FixedBaseMath.toFixed(32768.0f);
         long[] bigVec = {bigComp, bigComp, bigComp};
         long[] shortVec = {FixedBaseMath.toFixed(3.0f), FixedBaseMath.toFixed(-4.0f)};
-        long[] longVec = {FixedBaseMath.toFixed(1.0f), 0, 0, 0};
+        long[] longVec = {FixedBaseMath.FIXED1, 0, 0, 0};
         System.out.println();
     }
 
@@ -207,9 +207,12 @@ class FixedMatMathTest {
         printMatrix("Translation Matrix (3, -2, 10)", transM);
 
         long[] point123 = {
-            FixedBaseMath.toFixed(1.0f),
+            FixedBaseMath.FIXED1,
             FixedBaseMath.toFixed(2.0f),
             FixedBaseMath.toFixed(3.0f)
+        
+        
+        
         };
 
         // Test 3: Scale Matrix
@@ -245,7 +248,7 @@ class FixedMatMathTest {
         // Test 6: LookAt Matrix
         long[] eye = {0, 0, FixedBaseMath.toFixed(10.0f)};
         long[] target = {0, 0, 0};
-        long[] up = {0, FixedBaseMath.toFixed(1.0f), 0};
+        long[] up = {0, FixedBaseMath.FIXED1, 0};
         long[] lookAtM = FixedMatMath.createLookAt4x4(eye, target, up);
         printMatrix("LookAt Matrix (eye=(0,0,10), target=(0,0,0))", lookAtM);
 
@@ -253,7 +256,7 @@ class FixedMatMathTest {
         long fovDeg = 60;
         long fovRad = FixedBaseMath.toFixed((float) Math.toRadians(fovDeg));
         long aspect = FixedBaseMath.toFixed(1.333f);
-        long nearQ = FixedBaseMath.toFixed(1.0f);
+        long nearQ = FixedBaseMath.FIXED1;
         long farQ = FixedBaseMath.toFixed(100.0f);
         long[] perspM = FixedMatMath.createPerspective4x4(fovRad, aspect, nearQ, farQ);
         printMatrix("Perspective Projection Matrix", perspM);
@@ -267,7 +270,7 @@ class FixedMatMathTest {
 
         long bigX = FixedBaseMath.toFixed(10000.0f);
         long bigY = FixedBaseMath.toFixed(-9999.0f);
-        long bigZ = FixedBaseMath.toFixed(1.0f);
+        long bigZ = FixedBaseMath.FIXED1;
         long[] bigTrans = FixedMatMath.createTranslation4x4(bigX, bigY, bigZ);
         printMatrix("Translation Matrix (10000, -9999, 1)", bigTrans);
 

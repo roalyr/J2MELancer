@@ -20,7 +20,7 @@ public class Sphere {
     public static Model create(int numSegments, int numRings) {
         long[][] vertices = generateVertices(numSegments, numRings);
         int[][] edges = generateEdges(numSegments, numRings);
-        long boundingSphere = FixedBaseMath.toFixed(1.0f);
+        long boundingSphere = FixedBaseMath.FIXED1;
         return new Model(vertices, edges, boundingSphere);
     }
 

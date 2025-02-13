@@ -95,7 +95,7 @@ public class Cube {
             edges[i] = (int[]) edgeList.elementAt(i);
         }
 
-        long boundingSphere = FixedBaseMath.toFixed(1.0f);
+        long boundingSphere = FixedBaseMath.FIXED1;
         return new Model(vertices, edges, boundingSphere);
     }
 }

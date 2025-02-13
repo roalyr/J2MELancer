@@ -1,7 +1,6 @@
 package Renderer;
 
 import FixedMath.FixedMatMath;
-import FixedMath.FixedBaseMath;
 
 public class Perspective {
     private long[] perspectiveMatrix;

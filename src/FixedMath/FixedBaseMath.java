@@ -54,6 +54,16 @@ public final class FixedBaseMath {
     public static final long FIXED_SCALE = 1L << FIXED_SHIFT;
     public static final long MAX_FIXED = Long.MAX_VALUE;
     public static final long MIN_FIXED = Long.MIN_VALUE;
+    
+    public static final long FIXEDNEG1 = toFixed(-1.0f);
+    public static final long FIXED1 = toFixed(1.0f);
+    public static final long FIXED2 = toFixed(2.0f);
+    public static final long FIXED6 = toFixed(6.0f);
+    public static final long FIXED24 = toFixed(24.0f);
+    public static final long FIXED120 = toFixed(120.0f);
+    public static final long FIXED225 = toFixed(225.0f);
+    public static final long FIXED720 = toFixed(720.0f);
+    public static final long FIXED5040 = toFixed(5040.0f);
 
     public static long toFixed(float val) {
         float temp = val * FIXED_SCALE;
@@ -146,14 +156,14 @@ public final class FixedBaseMath {
 
     public static long pow(long base, float exponent) {
         if (exponent == 0) {
-            return toFixed(1f);
+            return FIXED1;
         }
         if (base == 0) {
             return 0;
         }
         int expInt = (int) exponent;
         float expFrac = exponent - expInt;
-        long resultInt = toFixed(1f);
+        long resultInt = FIXED1;
         for (int i = 0; i < expInt; i++) {
             resultInt = fixedMul(resultInt, base);
         }
@@ -162,8 +172,8 @@ public final class FixedBaseMath {
     }
 
     private static long powFractional(long base, float expFrac) {
-        long oneFixed = toFixed(1f);
-        long twoFixed = toFixed(2f);
+        long oneFixed = FIXED1;
+        long twoFixed = FIXED2;
         long baseNorm = base;
         while (baseNorm >= twoFixed) {
             baseNorm = fixedDiv(baseNorm, twoFixed);

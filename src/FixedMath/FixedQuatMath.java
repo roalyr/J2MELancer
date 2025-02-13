@@ -97,7 +97,7 @@ public final class FixedQuatMath {
             identity[0] = 0;
             identity[1] = 0;
             identity[2] = 0;
-            identity[3] = FixedBaseMath.toFixed(1.0f);
+            identity[3] = FixedBaseMath.FIXED1;
             return identity;
         }
         long normX = FixedBaseMath.fixedDiv(q[0], mag);
@@ -132,8 +132,8 @@ public final class FixedQuatMath {
         long wx = FixedBaseMath.fixedMul(w, x);
         long wy = FixedBaseMath.fixedMul(w, y);
         long wz = FixedBaseMath.fixedMul(w, z);
-        long two = FixedBaseMath.toFixed(2.0f);
-        long one = FixedBaseMath.toFixed(1.0f);
+        long two = FixedBaseMath.FIXED2;
+        long one = FixedBaseMath.FIXED1;
 
         long[] m = FixedMatMath.acquireMatrix();
         m[0]  = one - FixedBaseMath.fixedMul(two, FixedBaseMath.fixedAdd(yy, zz));

@@ -5,6 +5,10 @@ public final class FixedTrigMath {
     public static final long PI = FixedBaseMath.toFixed(3.14159265f);
     public static final long TWO_PI = FixedBaseMath.toFixed(6.2831853f);
     public static final long HALF_PI = FixedBaseMath.toFixed(1.57079633f);
+    
+    public static final long DEG180 = FixedBaseMath.toFixed(180.0f);
+    public static final long RADFACTOR = FixedBaseMath.fixedDiv(PI, DEG180);
+
 
     private static final long P0 = FixedBaseMath.toFixed(1.5707288f);
     private static final long P1 = FixedBaseMath.toFixed(-0.2121144f);
@@ -33,9 +37,9 @@ public final class FixedTrigMath {
         long x5 = FixedBaseMath.fixedMul(x3, x2);
         long x7 = FixedBaseMath.fixedMul(x5, x2);
         long term1 = x;
-        long term2 = FixedBaseMath.fixedDiv(x3, FixedBaseMath.toFixed(6.0f));
-        long term3 = FixedBaseMath.fixedDiv(x5, FixedBaseMath.toFixed(120.0f));
-        long term4 = FixedBaseMath.fixedDiv(x7, FixedBaseMath.toFixed(5040.0f));
+        long term2 = FixedBaseMath.fixedDiv(x3, FixedBaseMath.FIXED6);
+        long term3 = FixedBaseMath.fixedDiv(x5, FixedBaseMath.FIXED120);
+        long term4 = FixedBaseMath.fixedDiv(x7, FixedBaseMath.FIXED5040);
         long result = term1 - term2 + term3 - term4;
         return sign * result;
     }
@@ -57,11 +61,11 @@ public final class FixedTrigMath {
         long x2 = FixedBaseMath.fixedMul(x, x);
         long x4 = FixedBaseMath.fixedMul(x2, x2);
         long x6 = FixedBaseMath.fixedMul(x4, x2);
-        long one = FixedBaseMath.toFixed(1.0f);
+        long one = FixedBaseMath.FIXED1;
         long term1 = one;
-        long term2 = FixedBaseMath.fixedDiv(x2, FixedBaseMath.toFixed(2.0f));
-        long term3 = FixedBaseMath.fixedDiv(x4, FixedBaseMath.toFixed(24.0f));
-        long term4 = FixedBaseMath.fixedDiv(x6, FixedBaseMath.toFixed(720.0f));
+        long term2 = FixedBaseMath.fixedDiv(x2, FixedBaseMath.FIXED2);
+        long term3 = FixedBaseMath.fixedDiv(x4, FixedBaseMath.FIXED24);
+        long term4 = FixedBaseMath.fixedDiv(x6, FixedBaseMath.FIXED720);
         long result = term1 - term2 + term3 - term4;
         if (flip) {
             result = -result;
@@ -79,7 +83,7 @@ public final class FixedTrigMath {
     }
 
     public static long acos(long x) {
-        long one = FixedBaseMath.toFixed(1.0f);
+        long one = FixedBaseMath.FIXED1;
         if (x > one) {
             x = one;
         }

@@ -18,7 +18,7 @@ public class Camera {
         viewMatrix = FixedMatMath.createIdentity4x4();
         position = new long[]{0, 0, 0};
         // Persistent orientation starts as identity.
-        orientation = new long[]{0, 0, 0, FixedBaseMath.toFixed(1.0f)};
+        orientation = new long[]{0, 0, 0, FixedBaseMath.FIXED1};
     }
 
     // Returns the view matrix used for rendering.
@@ -64,7 +64,7 @@ public class Camera {
 
     // Applies a yaw rotation (about local up: [0,1,0]).
     public void addYaw(long angleQ) {
-        long[] delta = FixedQuatMath.fromAxisAngle(new long[]{0, FixedBaseMath.toFixed(1.0f), 0}, angleQ);
+        long[] delta = FixedQuatMath.fromAxisAngle(new long[]{0, FixedBaseMath.FIXED1, 0}, angleQ);
         long[] multResult = FixedQuatMath.multiply(orientation, delta);
         FixedQuatMath.releaseQuaternion(delta);
         long[] normResult = FixedQuatMath.normalize(multResult);
@@ -75,7 +75,7 @@ public class Camera {
 
     // Applies a pitch rotation (about local right: [1,0,0]).
     public void addPitch(long angleQ) {
-        long[] delta = FixedQuatMath.fromAxisAngle(new long[]{FixedBaseMath.toFixed(1.0f), 0, 0}, angleQ);
+        long[] delta = FixedQuatMath.fromAxisAngle(new long[]{FixedBaseMath.FIXED1, 0, 0}, angleQ);
         long[] multResult = FixedQuatMath.multiply(orientation, delta);
         FixedQuatMath.releaseQuaternion(delta);
         long[] normResult = FixedQuatMath.normalize(multResult);
@@ -86,7 +86,7 @@ public class Camera {
 
     // Applies a roll rotation (about local forward: [0,0,1]).
     public void addRoll(long angleQ) {
-        long[] delta = FixedQuatMath.fromAxisAngle(new long[]{0, 0, FixedBaseMath.toFixed(1.0f)}, angleQ);
+        long[] delta = FixedQuatMath.fromAxisAngle(new long[]{0, 0, FixedBaseMath.FIXED1}, angleQ);
         long[] multResult = FixedQuatMath.multiply(orientation, delta);
         FixedQuatMath.releaseQuaternion(delta);
         long[] normResult = FixedQuatMath.normalize(multResult);
@@ -104,7 +104,7 @@ public class Camera {
 
     public void moveForward(long amount) {
         long[] rot = getRotationMatrix();
-        long[] localForward = new long[]{0, 0, -FixedBaseMath.toFixed(1.0f), 0};
+        long[] localForward = new long[]{0, 0, -FixedBaseMath.FIXED1, 0};
         long[] worldForward = new long[4];
         FixedMatMath.transformPoint(rot, localForward, worldForward);
         position[0] = FixedBaseMath.fixedAdd(position[0], FixedBaseMath.fixedMul(worldForward[0], amount));
@@ -115,7 +115,7 @@ public class Camera {
 
     public void moveRight(long amount) {
         long[] rot = getRotationMatrix();
-        long[] localRight = new long[]{FixedBaseMath.toFixed(1.0f), 0, 0, 0};
+        long[] localRight = new long[]{FixedBaseMath.FIXED1, 0, 0, 0};
         long[] worldRight = new long[4];
         FixedMatMath.transformPoint(rot, localRight, worldRight);
         position[0] = FixedBaseMath.fixedAdd(position[0], FixedBaseMath.fixedMul(worldRight[0], amount));
@@ -126,7 +126,7 @@ public class Camera {
 
     public void moveUp(long amount) {
         long[] rot = getRotationMatrix();
-        long[] localUp = new long[]{0, FixedBaseMath.toFixed(1.0f), 0, 0};
+        long[] localUp = new long[]{0, FixedBaseMath.FIXED1, 0, 0};
         long[] worldUp = new long[4];
         FixedMatMath.transformPoint(rot, localUp, worldUp);
         position[0] = FixedBaseMath.fixedAdd(position[0], FixedBaseMath.fixedMul(worldUp[0], amount));

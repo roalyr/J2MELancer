@@ -14,7 +14,7 @@ public class SceneObject {
 
     public SceneObject(Model model) {
         this.model = model;
-        this.scale = FixedBaseMath.toFixed(1.0f);
+        this.scale = FixedBaseMath.FIXED1;
         this.material = null;
         updateBoundingSphereRadiusScaled();
     }

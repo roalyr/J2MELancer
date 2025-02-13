@@ -38,10 +38,10 @@ public class Material {
         this.nearMarginQ = nearMarginQ;
         this.farMarginQ = farMarginQ;
         if (this.nearMarginQ <= 0) {
-            this.nearMarginQ = FixedBaseMath.toFixed(1.0f);
+            this.nearMarginQ = FixedBaseMath.FIXED1;
         }
         if (this.farMarginQ <= 0) {
-            this.farMarginQ = FixedBaseMath.toFixed(1.0f);
+            this.farMarginQ = FixedBaseMath.FIXED1;
         }
         this.fadeDistanceNearQ = fadeDistanceQNear;
         this.fadeDistanceFarQ = fadeDistanceQFar;

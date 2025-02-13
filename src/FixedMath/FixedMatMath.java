@@ -5,12 +5,6 @@ import java.util.Vector;
 
 public final class FixedMatMath {
 
-    public static final int FIXED_SHIFT = FixedBaseMath.FIXED_SHIFT;
-    public static final long FIXED_SCALE = FixedBaseMath.FIXED_SCALE;
-
-    private static final long ONE = FixedBaseMath.toFixed(1.0f);
-    private static final long NEG_ONE = FixedBaseMath.toFixed(-1.0f);
-
     private static final Hashtable pool = new Hashtable();
     private static final int MAX_IDLE_POOL_SIZE = 1024;
 
@@ -48,10 +42,10 @@ public final class FixedMatMath {
         for (int i = 0; i < 16; i++) {
             m[i] = 0;
         }
-        m[0] = ONE;
-        m[5] = ONE;
-        m[10] = ONE;
-        m[15] = ONE;
+        m[0] = FixedBaseMath.FIXED1;
+        m[5] = FixedBaseMath.FIXED1;
+        m[10] = FixedBaseMath.FIXED1;
+        m[15] = FixedBaseMath.FIXED1;
         return m;
     }
 
@@ -76,7 +70,7 @@ public final class FixedMatMath {
         long cos = FixedTrigMath.cos(angle);
         long[] m = createIdentity4x4();
         m[5] = cos;
-        m[6] = FixedBaseMath.fixedMul(NEG_ONE, sin);
+        m[6] = FixedBaseMath.fixedMul(FixedBaseMath.FIXEDNEG1, sin);
         m[9] = sin;
         m[10] = cos;
         return m;
@@ -88,7 +82,7 @@ public final class FixedMatMath {
         long[] m = createIdentity4x4();
         m[0] = cos;
         m[2] = sin;
-        m[8] = FixedBaseMath.fixedMul(NEG_ONE, sin);
+        m[8] = FixedBaseMath.fixedMul(FixedBaseMath.FIXEDNEG1, sin);
         m[10] = cos;
         return m;
     }
@@ -98,7 +92,7 @@ public final class FixedMatMath {
         long cos = FixedTrigMath.cos(angle);
         long[] m = createIdentity4x4();
         m[0] = cos;
-        m[1] = FixedBaseMath.fixedMul(NEG_ONE, sin);
+        m[1] = FixedBaseMath.fixedMul(FixedBaseMath.FIXEDNEG1, sin);
         m[4] = sin;
         m[5] = cos;
         return m;
@@ -112,7 +106,7 @@ public final class FixedMatMath {
 
         long cos = FixedTrigMath.cos(angle);
         long sin = FixedTrigMath.sin(angle);
-        long t = ONE - cos;
+        long t = FixedBaseMath.FIXED1 - cos;
 
         long[] m = acquireMatrix();
         m[0] = cos + FixedBaseMath.fixedMul(t, FixedBaseMath.fixedMul(x, x));
@@ -130,7 +124,7 @@ public final class FixedMatMath {
         m[12] = 0;
         m[13] = 0;
         m[14] = 0;
-        m[15] = ONE;
+        m[15] = FixedBaseMath.FIXED1;
         return m;
     }
 
@@ -146,10 +140,10 @@ public final class FixedMatMath {
             long sum1 = m1_0 * m2[1] + m1_1 * m2[5] + m1_2 * m2[9] + m1_3 * m2[13];
             long sum2 = m1_0 * m2[2] + m1_1 * m2[6] + m1_2 * m2[10] + m1_3 * m2[14];
             long sum3 = m1_0 * m2[3] + m1_1 * m2[7] + m1_2 * m2[11] + m1_3 * m2[15];
-            r[rBase + 0] = sum0 >> FIXED_SHIFT;
-            r[rBase + 1] = sum1 >> FIXED_SHIFT;
-            r[rBase + 2] = sum2 >> FIXED_SHIFT;
-            r[rBase + 3] = sum3 >> FIXED_SHIFT;
+            r[rBase + 0] = sum0 >> FixedBaseMath.FIXED_SHIFT;
+            r[rBase + 1] = sum1 >> FixedBaseMath.FIXED_SHIFT;
+            r[rBase + 2] = sum2 >> FixedBaseMath.FIXED_SHIFT;
+            r[rBase + 3] = sum3 >> FixedBaseMath.FIXED_SHIFT;
         }
         return r;
     }
@@ -157,7 +151,7 @@ public final class FixedMatMath {
     public static void transformPoint(long[] m4x4, long[] xyz, long[] out) {
         long w;
         if (xyz.length == 3) {
-            w = FixedBaseMath.toFixed(1.0f);
+            w = FixedBaseMath.FIXED1;
         } else {
             w = xyz[3];
         }
@@ -167,7 +161,7 @@ public final class FixedMatMath {
                        m4x4[base + 1] * xyz[1] +
                        m4x4[base + 2] * xyz[2] +
                        m4x4[base + 3] * w;
-            out[row] = sum >> FIXED_SHIFT;
+            out[row] = sum >> FixedBaseMath.FIXED_SHIFT;
         }
     }
 
@@ -178,7 +172,7 @@ public final class FixedMatMath {
             long sum = m[base + 0] * xyz[0] +
                        m[base + 1] * xyz[1] +
                        m[base + 2] * xyz[2];
-            out3[row] = sum >> FIXED_SHIFT;
+            out3[row] = sum >> FixedBaseMath.FIXED_SHIFT;
         }
         return out3;
     }
@@ -214,32 +208,29 @@ public final class FixedMatMath {
         m[9] = zAxis[1];
         m[10] = zAxis[2];
         m[11] = 0;
-        long negDotX = FixedBaseMath.fixedMul(NEG_ONE, FixedVecMath.fixedDotProduct(xAxis, eyeL));
-        long negDotY = FixedBaseMath.fixedMul(NEG_ONE, FixedVecMath.fixedDotProduct(yAxis, eyeL));
-        long negDotZ = FixedBaseMath.fixedMul(NEG_ONE, FixedVecMath.fixedDotProduct(zAxis, eyeL));
+        long negDotX = FixedBaseMath.fixedMul(FixedBaseMath.FIXEDNEG1, FixedVecMath.fixedDotProduct(xAxis, eyeL));
+        long negDotY = FixedBaseMath.fixedMul(FixedBaseMath.FIXEDNEG1, FixedVecMath.fixedDotProduct(yAxis, eyeL));
+        long negDotZ = FixedBaseMath.fixedMul(FixedBaseMath.FIXEDNEG1, FixedVecMath.fixedDotProduct(zAxis, eyeL));
         m[12] = negDotX;
         m[13] = negDotY;
         m[14] = negDotZ;
-        m[15] = ONE;
+        m[15] = FixedBaseMath.FIXED1;
         return m;
     }
 
     public static long[] createPerspective4x4(long fovY, long aspect, long near, long far) {
-        final long ONE_Q = 1L << FIXED_SHIFT;
-        final long TWO_Q = 2L << FIXED_SHIFT;
-        final long PI_Q = FixedBaseMath.toFixed(3.14159265f);
-        final long DEG180_Q = 180L << FIXED_SHIFT;
-        long factor = FixedBaseMath.fixedDiv(PI_Q, DEG180_Q);
+
+        long factor = FixedTrigMath.RADFACTOR;
         long halfFov_deg = fovY >> 1;
         long halfFov_rad = FixedBaseMath.fixedMul(halfFov_deg, factor);
         long sinHalf = FixedTrigMath.sin(halfFov_rad);
         long cosHalf = FixedTrigMath.cos(halfFov_rad);
         long tanHalf = FixedBaseMath.fixedDiv(sinHalf, cosHalf);
         long top = FixedBaseMath.fixedMul(near, tanHalf);
-        long bottom = -top;
+        //long bottom = -top;
         long right = FixedBaseMath.fixedMul(top, aspect);
-        long left = -right;
-        long twoN = FixedBaseMath.fixedMul(near, TWO_Q);
+        //long left = -right;
+        long twoN = FixedBaseMath.fixedMul(near, FixedBaseMath.FIXED2);
         long rl = right << 1;
         long tb = top << 1;
         long fn = far - near;
@@ -250,7 +241,7 @@ public final class FixedMatMath {
         long sumFarNear = far + near;
         long E = -FixedBaseMath.fixedDiv(sumFarNear, fn);
         long productFarNear = FixedBaseMath.fixedMul(far, near);
-        long twoProduct = FixedBaseMath.fixedMul(productFarNear, TWO_Q);
+        long twoProduct = FixedBaseMath.fixedMul(productFarNear, FixedBaseMath.FIXED2);
         long F_val = -FixedBaseMath.fixedDiv(twoProduct, fn);
         long[] m = acquireMatrix();
         m[0]  = A;
@@ -267,7 +258,7 @@ public final class FixedMatMath {
         m[11] = F_val;
         m[12] = 0;
         m[13] = 0;
-        m[14] = -ONE_Q;
+        m[14] = -FixedBaseMath.FIXED1;
         m[15] = 0;
         return m;
     }

@@ -95,7 +95,7 @@ public final class RenderEffects {
     // Below here remain your original fade/darkening methods
     // ---------------------------------------------------------
 
-    public static int interpolateColor(long z, long z0, long z1, int color0, int color1) {
+    public static int _interpolateColor_(long z, long z0, long z1, int color0, int color1) {
         long rangeQ = FixedBaseMath.fixedSub(z1, z0);
         if (rangeQ <= 0) {
             return color1;
@@ -103,7 +103,7 @@ public final class RenderEffects {
         long distQ = FixedBaseMath.fixedSub(z, z0);
         long ratioQ = FixedBaseMath.fixedDiv(distQ, rangeQ);
         if (ratioQ < 0) ratioQ = 0;
-        long oneQ = FixedBaseMath.toFixed(1.0f);
+        long oneQ = FixedBaseMath.FIXED1;
         if (ratioQ > oneQ) ratioQ = oneQ;
 
         int a0 = (color0 >>> 24) & 0xFF;
@@ -150,7 +150,7 @@ public final class RenderEffects {
             long dz = FixedBaseMath.fixedSub(z, nearQ);
             long ratioQ = FixedBaseMath.fixedDiv(dz, fadeNearQ);
             if (ratioQ < 0) ratioQ = 0;
-            if (ratioQ > FixedBaseMath.toFixed(1.0f)) ratioQ = FixedBaseMath.toFixed(1.0f);
+            if (ratioQ > FixedBaseMath.FIXED1) ratioQ = FixedBaseMath.FIXED1;
             return ratioQToAlpha(ratioQ);
         }
         long farMinusFade = FixedBaseMath.fixedSub(farQ, fadeFarQ);
@@ -158,7 +158,7 @@ public final class RenderEffects {
             long dz = FixedBaseMath.fixedSub(farQ, z);
             long ratioQ = FixedBaseMath.fixedDiv(dz, fadeFarQ);
             if (ratioQ < 0) ratioQ = 0;
-            if (ratioQ > FixedBaseMath.toFixed(1.0f)) ratioQ = FixedBaseMath.toFixed(1.0f);
+            if (ratioQ > FixedBaseMath.FIXED1) ratioQ = FixedBaseMath.FIXED1;
             return ratioQToAlpha(ratioQ);
         }
         return 255;
@@ -175,8 +175,8 @@ public final class RenderEffects {
         long diffQ = FixedBaseMath.fixedSub(localZ, localZmin);
         long ratioQ = FixedBaseMath.fixedDiv(diffQ, rangeQ);
         if (ratioQ < 0) ratioQ = 0;
-        if (ratioQ > FixedBaseMath.toFixed(1.0f)) ratioQ = FixedBaseMath.toFixed(1.0f);
-        long invertedRatioQ = FixedBaseMath.fixedSub(FixedBaseMath.toFixed(1.0f), ratioQ);
+        if (ratioQ > FixedBaseMath.FIXED1) ratioQ = FixedBaseMath.FIXED1;
+        long invertedRatioQ = FixedBaseMath.fixedSub(FixedBaseMath.FIXED1, ratioQ);
         return ratioQToAlpha(invertedRatioQ);
     }
 
@@ -189,16 +189,16 @@ public final class RenderEffects {
             localZ = R;
         }
         long shifted = FixedBaseMath.fixedAdd(localZ, R);
-        long twoR = FixedBaseMath.fixedMul(FixedBaseMath.toFixed(2.0f), R);
+        long twoR = FixedBaseMath.fixedMul(FixedBaseMath.FIXED2, R);
         long ratioQ = FixedBaseMath.fixedDiv(shifted, twoR);
         if (ratioQ < 0) ratioQ = 0;
-        if (ratioQ > FixedBaseMath.toFixed(1.0f)) ratioQ = FixedBaseMath.toFixed(1.0f);
-        long invRatioQ = FixedBaseMath.fixedSub(FixedBaseMath.toFixed(1.0f), ratioQ);
+        if (ratioQ > FixedBaseMath.FIXED1) ratioQ = FixedBaseMath.FIXED1;
+        long invRatioQ = FixedBaseMath.fixedSub(FixedBaseMath.FIXED1, ratioQ);
         return ratioQToAlpha(invRatioQ);
     }
 
     public static int ratioQToAlpha(long ratioQ) {
-        long alphaQ = FixedBaseMath.fixedMul(ratioQ, FixedBaseMath.toFixed(255.0f));
+        long alphaQ = FixedBaseMath.fixedMul(ratioQ, FixedBaseMath.FIXED225);
         int alphaI = FixedBaseMath.toInt(alphaQ);
         if (alphaI < ALPHA_THRESHOLD_LOCAL_LOW) {
             alphaI = ALPHA_THRESHOLD_LOCAL_LOW;

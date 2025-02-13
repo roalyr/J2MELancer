@@ -31,7 +31,7 @@ public class RandomCloud {
             }
         }
         int[][] edges = new int[0][0];
-        long boundingSphere = FixedBaseMath.toFixed(1.0f);
+        long boundingSphere = FixedBaseMath.FIXED1;
         return new Model(vertices, edges, boundingSphere);
     }
 }
